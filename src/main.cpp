@@ -2,11 +2,28 @@
 
 // Pin definitions
 #define HALL_PIN D0
-#define LED_PIN D1
-#define NUM_LEDS 10
 
-// Global variables
-CRGB leds[NUM_LEDS];
+#define LED_1_CLOCK D1
+#define LED_1_DATA  D2
+#define LED_2_CLOCK D3
+#define LED_2_DATA  D4
+#define LED_3_CLOCK D5
+#define LED_3_DATA  D6
+
+#define DEGREES_PER_COLUMN 2
+#define NUM_ACTIVE_SEGMENTS 1  // Can be changed to 2 or 3 as needed
+
+#define NUM_LEDS_PER_SEGMENT 10
+#define NUM_SEGMENTS 3
+
+#define LED_DATA_RATE_MHZ 8
+
+
+
+
+CRGB leds[NUM_SEGMENTS][NUM_LEDS_PER_SEGMENT];
+
+
 volatile bool newRevolution = false;
 volatile unsigned long lastHallTrigger = 0;
 unsigned long deltaT = 0;  // Time for half a revolution (two triggers per full revolution)
@@ -15,22 +32,30 @@ unsigned long deltaT = 0;  // Time for half a revolution (two triggers per full 
 void hallEffectTrigger();
 
 void updateLEDs(int column) {
-  if(column == 0) {
-    leds[0] = CRGB::Red;
-    leds[4] = CRGB::Green;
-    leds[9] = CRGB::Blue;
-  } else {
-    leds[0] = CRGB::Black;
-    leds[4] = CRGB::Black;
-    leds[9] = CRGB::Black;
+  FastLED.clear();  // Clear all LEDs
+
+  // Calculate which LEDs to light up based on the current column
+  for (int segment = 0; segment < NUM_ACTIVE_SEGMENTS; ++segment) {
+    for (int i = 0; i < NUM_LEDS_PER_SEGMENT; ++i) {
+      // Determine the logic for lighting up LEDs based on the column
+      // Example: light up the LED if it matches the column number
+      if ((column / DEGREES_PER_COLUMN) % NUM_LEDS_PER_SEGMENT == i) {
+        leds[segment][i] = CRGB::White;
+      }
+    }
   }
-  FastLED.show();
+
+  FastLED.show(); // Update the display
 }
+
 
 
 void setup() {
   // Set up the LED strip
-  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.addLeds<APA102, LED_1_DATA, LED_1_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[0][0], NUM_LEDS_PER_SEGMENT);
+  FastLED.addLeds<APA102, LED_2_DATA, LED_2_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[1][0], NUM_LEDS_PER_SEGMENT);
+  FastLED.addLeds<APA102, LED_3_DATA, LED_3_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[2][0], NUM_LEDS_PER_SEGMENT);
+
   FastLED.clear();
   FastLED.show();
   Serial.begin();
@@ -43,8 +68,9 @@ void setup() {
 int calculateCurrentColumn(unsigned long currentMicros, unsigned long triggerMicros, unsigned long timePerColumn) {
   float elapsedMicros = currentMicros - triggerMicros;
   float columnsElapsed = elapsedMicros / timePerColumn;
-  return static_cast<int>(round(columnsElapsed)) * 2; // Multiply by 2 for full column count, round to nearest column
+  return static_cast<int>(round(columnsElapsed)); // Round to nearest column
 }
+
 
 
 void loop() {
@@ -83,5 +109,5 @@ void loop() {
 // Interrupt service routine for the Hall effect sensor
 void hallEffectTrigger() {
   newRevolution = true;
-  //Serial.println("hello");
+  Serial.println("hello");
 }
