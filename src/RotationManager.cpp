@@ -11,12 +11,14 @@
 // Initialize the static member
 RotationManager *RotationManager::instance = nullptr;
 
-RotationManager::RotationManager(TaskHandle_t callbackHandle, uint numColumns) : _callbackTask_h(callbackHandle), _numColumns(numColumns), _degreesPerColumn(360 / numColumns)
-{
-    assert(IS_DIVISIBLE_BY_360(numColumns));
 
-    instance = this;
+RotationManager::RotationManager(TaskHandle_t stepTriggerTask_h, column_num_t stepsPerRotation) : _stepTriggerTask_h(stepTriggerTask_h), _stepsPerRotation(stepsPerRotation)
+{
+    assert(IS_DIVISIBLE_BY_360(stepsPerRotation));
+
+    instance=this;
     _rpm = new Smoother(micros());
+    
 }
 
 void RotationManager::start()
@@ -24,12 +26,12 @@ void RotationManager::start()
     attachInterrupt(digitalPinToInterrupt(HALL_PIN), RotationManager::isrWrapper, FALLING);
 
     xTaskCreate(&RotationManager::timingTask, "TimingTask", RTOS::LARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY, &_timingTask_h);
-    this->_columnTimer_h = xTimerCreate("ColumnTimer", pdUS_TO_TICKS(1000), pdTRUE, this, &RotationManager::columnTimer);
+    this->_stepTimer_h = xTimerCreate("StepTimer", pdUS_TO_TICKS(1000), pdTRUE, this, &RotationManager::stepTimer);
 }
 
-delta_t RotationManager::getµsPerColumn()
+delta_t RotationManager::getµsPerStep()
 {
-    return _µsPerColumn;
+    return _µsPerStep;
 }
 
 void RotationManager::HallEffectISR()
@@ -40,7 +42,7 @@ void RotationManager::HallEffectISR()
     this->_rpm->addTimestamp(micros());
 
 #ifdef FORCE_COLUMNS_ON_HALL_SENSOR
-    this->forceColumns();
+    this->forceSteps();
 #endif 
 
     // Notify the timing task that a new half-rotation has been triggered
@@ -66,38 +68,24 @@ void RotationManager::timingTask(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-void RotationManager::columnTimer(TimerHandle_t xTimer)
+void RotationManager::stepTimer(TimerHandle_t xTimer)
 {
     RotationManager *instance = (RotationManager *)pvTimerGetTimerID(xTimer);
     assert(instance != nullptr);
-    
-    instance->_currentColumn = (instance->_currentColumn + 1) % instance->_numColumns;
+
+    instance->_currentStep = (instance->_currentStep + 1) % instance->_stepsPerRotation;
 
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-    xTaskNotifyFromISR(instance->_callbackTask_h, instance->_currentColumn, eSetValueWithOverwrite, &xHigherPriorityTaskWoken);
+    // notify whatever task out there needs notification. give them the current step.
+    xTaskNotifyFromISR(instance->_stepTriggerTask_h, instance->_currentStep, eSetValueWithOverwrite, &xHigherPriorityTaskWoken);
 
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
-void RotationManager::forceColumns()
-{
-    static bool isHalfColumn = false;
-
-    // force the column count to match the position of the magnet (either 0 degrees or 180 degrees)
-    if (isHalfColumn) {
-        this->_currentColumn = this->_numColumns / 2; 
-        isHalfColumn = !isHalfColumn;
-    } else {
-        this->_currentColumn = 0;
-        isHalfColumn = !isHalfColumn;
-    }
-
-}
-
 void RotationManager::adjustTimer()
 {
-    this->_µsPerColumn = _rpm->getMicrosecondsPerRevolution() / _numColumns;
+    this->_µsPerStep = _rpm->getMicrosecondsPerRevolution() / static_cast<delta_t>(_stepsPerRotation);
 
-    xTimerChangePeriod(this->_columnTimer_h, pdUS_TO_TICKS(this->getµsPerColumn()), 0);
+    xTimerChangePeriod(this->_stepTimer_h, pdUS_TO_TICKS(this->getµsPerStep()), 0);
 }

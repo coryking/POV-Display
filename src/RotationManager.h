@@ -17,9 +17,9 @@ typedef void (*microperrev_cb)(micro_per_rev_t newMicrosPerRevolution);
 class RotationManager
 {
 public:
-    RotationManager(TaskHandle_t callbackTask, uint numColumns = 360);
+    RotationManager(TaskHandle_t stepTriggerTask_h, column_num_t stepsPerRotation = 360);
     void start();
-    delta_t getµsPerColumn();
+    delta_t getµsPerStep();
 
 protected:
     static RotationManager *instance;
@@ -37,21 +37,16 @@ protected:
 private:
     static void timingTask(void *pvParameters);
     
-    static void columnTimer(TimerHandle_t xTimer);
-
-    void forceColumns();
-
+    static void stepTimer(TimerHandle_t xTimer);
     void adjustTimer();
 
     TaskHandle_t _timingTask_h;
-    TaskHandle_t _callbackTask_h;
-    TimerHandle_t _columnTimer_h;    
+    const TaskHandle_t _stepTriggerTask_h;
+    TimerHandle_t _stepTimer_h;    
     Smoother* _rpm;
-    const uint _numColumns;
-    const uint _degreesPerColumn;
-    volatile column_num_t _currentColumn = -1;
-    volatile uint64_t _halfColumnCount = -1;
-    delta_t _µsPerColumn;
+    const column_num_t _stepsPerRotation;
+    volatile column_num_t _currentStep = -1;
+    delta_t _µsPerStep;
     
 };
 
