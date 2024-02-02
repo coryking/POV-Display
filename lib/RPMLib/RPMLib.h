@@ -20,7 +20,7 @@ public:
     RPMSmoother_t() : _lastTimestamp(0)
     {}
 
-    RPMSmoother_t &addTimetamp(timestamp_t currentTimestamp)
+    RPMSmoother_t &addTimestamp(timestamp_t currentTimestamp)
     {
         delta_t delta = currentTimestamp - _lastTimestamp;
         _lastTimestamp = currentTimestamp;

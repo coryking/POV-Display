@@ -1,6 +1,8 @@
 #ifndef __ROTATIONMANAGER_H__
 #define __ROTATIONMANAGER_H__
 
+#include <FreeRTOS.h>
+#include <timers.h>
 #include <task.h>
 #include <cstdint>
 #include "config.h"

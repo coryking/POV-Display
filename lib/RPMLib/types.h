@@ -1,13 +1,9 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
-
-#include "compareFloats.h"
 #include <cstdint>
 #include <float.h>
 #include <cmath>
-#include <Arduino.h>
-
 
 typedef float delta_t;
 typedef uint64_t timestamp_t;
@@ -35,6 +31,5 @@ typedef int column_num_t;
 #endif
 
 //#define PID_TUNE_MODE
-
 
 #endif // __TYPES_H__
