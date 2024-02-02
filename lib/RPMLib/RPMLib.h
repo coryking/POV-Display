@@ -4,7 +4,6 @@
 #include <cstdint>
 #include "ExponentialMovingAverage.h"
 #include "RollingAverage.h"
-#include "compareFloats.h"
 
 #include "types.h"
 

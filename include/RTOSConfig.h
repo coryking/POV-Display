@@ -1,8 +1,6 @@
 #ifndef RTOS_CONFIG_H_
 #define RTOS_CONFIG_H_
 
-#include <FreeRTOS.h>
-
 namespace RTOS {
 
 // Priorities (adjust as needed for your system)
