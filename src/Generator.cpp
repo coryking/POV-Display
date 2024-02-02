@@ -1,8 +1,5 @@
-#include <FreeRTOS.h>
-#include <queue.h>
-#include <task.h>
-#include <cassert>
 #include "Generator.h"
+#include <cassert>
 #include "RTOSConfig.h"
 
 Generator::Generator()
