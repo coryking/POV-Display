@@ -11,6 +11,10 @@
 #include "Renderer.h"
 #include "Generators/SimpleLine.h"
 
+static RotationManager* rm;
+static Renderer* r;
+static DisplayController* dc;
+
 void setup()
 {
 
@@ -18,5 +22,5 @@ void setup()
 
 void loop()
 {
-  
+
 }

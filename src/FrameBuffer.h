@@ -1,5 +1,5 @@
-#ifndef FRAMEBUFFER_H
-#define FRAMEBUFFER_H
+#ifndef __FRAMEBUFFER_H__
+#define __FRAMEBUFFER_H__
 
 #include <FastLED.h>
 #include <cassert>
@@ -95,4 +95,4 @@ typedef struct
     FrameBuffer *framebuffer;
 } generatorParams;
 
-#endif // FRAMEBUFFER_H
+#endif // __FRAMEBUFFER_H__

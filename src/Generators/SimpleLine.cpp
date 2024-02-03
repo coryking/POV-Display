@@ -18,6 +18,5 @@ bool SimpleLine::GenerateFrame(generatorParams params)
 
 SimpleLine::SimpleLine() : Generator()
 {
-
     currentPalette = PartyColors_p;
 }
