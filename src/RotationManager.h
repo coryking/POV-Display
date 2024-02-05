@@ -22,19 +22,29 @@ public:
     RotationManager(TaskHandle_t stepTriggerTask_h, column_num_t stepsPerRotation = 360);
     void start();
     delta_t getµsPerStep();
+    rotation_position_t getCurrentStep();
+    /**
+     * @brief Get the estimated timestamp for n number of rotations in the future
+     * 
+     * @param rotationsOut how many rotations to estimate
+     * @return timestamp_t estimated timestamp for this future rotation
+     */
+    timestamp_t getEstTimeForFutureRotation(uint rotationsOut);
+    void HallEffectISR();
+    static RotationManager *instance;
 
 protected:
-    static RotationManager *instance;
 
     static void isrWrapper()
     {
+        Serial.println("Hi from ISR");
         assert(instance != nullptr);
 
         instance->HallEffectISR();
     
     }
 
-    void HallEffectISR();
+    void setCurrentStep(step_t currentStep, timestamp_t stepTimestamp);
 
 private:
     static void timingTask(void *pvParameters);
@@ -46,9 +56,11 @@ private:
     const TaskHandle_t _stepTriggerTask_h;
     TimerHandle_t _stepTimer_h;    
     Smoother* _rpm;
-    const column_num_t _stepsPerRotation;
-    volatile column_num_t _currentStep = -1;
+    const step_t _stepsPerRotation;
+    volatile rotation_position_t _rotation_position;
     delta_t _µsPerStep;
+    // The timestemp for the last step zero. used for estimating future timestamps
+    volatile timestamp_t tsOfLastZeroPoint;
     
 };
 

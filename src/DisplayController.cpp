@@ -4,16 +4,25 @@
 #include <task.h>
 #include <cassert>
 #include "DisplayController.h"
+#include "config.h"
 #include "RTOSConfig.h"
 
 DisplayController::DisplayController()
 {
-    
+    renderer = new Renderer();
+    generator = new SimpleLine();
 }
 
 void DisplayController::start()
 {
-     xTaskCreate(&DisplayController::StepHandlerTask, "TimingTask", RTOS::LARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY, &_stepTask);   
+    Serial.println("Starting displaycontroller");
+    xTaskCreate(&DisplayController::StepHandlerTask, "TimingTask", RTOS::LARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY, &_stepTask);
+    bufferManager = new FrameBufferManager_t<CRGB>();
+    _rotation_manager = new RotationManager(_stepTask, NUM_STEPS);
+    _rotation_manager->start();
+    generator->start();
+    renderer->start();
+    Serial.println("Everything is up");
 }
 
 TaskHandle_t DisplayController::getStepTaskHandler()
@@ -28,13 +37,37 @@ void DisplayController::StepHandlerTask(void *pvParameters)
 
     while (true)
     {
-        instance->handleStep();
+
+        if (ulTaskNotifyTake(pdTRUE, portMAX_DELAY) == pdTRUE)
+        {
+            
+            rotation_position_t pos = instance->_rotation_manager->getCurrentStep();
+            Serial.printf("Hello from step task %d ts: %llu\n", pos.step, pos.stepTimestamp);
+            instance->invokeRenderer(pos);
+            instance->handleFrameShift(pos);
+        }
     }
     vTaskDelete(NULL);
 }
 
-
-void handleStep()
+void DisplayController::invokeRenderer(rotation_position_t rotationPosition)
 {
-    
+    auto stepbuffer = bufferManager->getSegmentsForStep(rotationPosition.step);
+    renderer->renderStepBuffer(stepbuffer);
+}
+
+void DisplayController::handleFrameShift(rotation_position_t rotationPosition)
+{
+    if (!bufferManager->needsFrameShift())
+        return;
+
+    Serial.println("Needs frame shift, eh?");
+    bufferManager->shiftFrames();
+    Serial.println("shifted");
+    FrameBuffer* genBuffer = bufferManager->getGeneratorFrame();
+    Serial.println("got frame to generate");
+    genBuffer->clearBuffer();
+    Serial.println("cleared buffer");
+    generator->enqueueNextFrame({_rotation_manager->getEstTimeForFutureRotation(1), genBuffer});
+    Serial.println("Enqueued stuff");
 }

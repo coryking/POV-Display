@@ -5,9 +5,10 @@
 #include <cassert>
 #include <cstring> // For memset
 #include "config.h"
+#include "SegmentBuffer.h"
 
 
-enum class FrameBufferStatus {
+enum class FrameBufferState {
     Empty,
     QueuedForGeneration,
     Generating,
@@ -16,35 +17,44 @@ enum class FrameBufferStatus {
     RenderingComplete
 };
 
-template<typename T, unsigned int COLS, unsigned int ROWS, unsigned int SEGMENTS>
+template<typename T>
 class FrameBuffer_t {
 public:
-    FrameBuffer_t() : _status(FrameBufferStatus::Empty) {
-        static_assert(COLS % SEGMENTS == 0, "Columns must be divisible by segments.");
-        static_assert(sizeof(T) == 1 || (sizeof(T) & (sizeof(T) - 1)) == 0, "T must be 1 byte or power of 2 bytes size for memset to be safe.");
+    FrameBuffer_t() : _state(FrameBufferState::Empty) {
+        static_assert(NUM_STEPS % NUM_SEGMENTS == 0, "Columns must be divisible by segments.");
+        //static_assert(sizeof(T) == 1 || (sizeof(T) & (sizeof(T) - 1)) == 0, "T must be 1 byte or power of 2 bytes size for memset to be safe.");
     }
 
     T* getBuffer() {
         return &buffer[0][0];
     }
-
-    void getSegment(unsigned int column, unsigned int segment, T output[ROWS / SEGMENTS]) {
-        assert(segment < SEGMENTS);
-        for (unsigned int virtcol = segment, segcol = 0; segcol < _segmentSize; virtcol += SEGMENTS, ++segcol) {
-                output[segcol] = buffer[column][virtcol];
+    SegmentBuffer_t<T> getSegment(unsigned int column, unsigned int segment) {
+        assert(segment < NUM_SEGMENTS);
+        
+        SegmentBuffer_t<T> output;
+        
+        for (unsigned int virtcol = segment, segcol = 0; segcol < NUM_LEDS_PER_SEGMENT; virtcol += NUM_SEGMENTS, ++segcol) {
+            output[segcol] = buffer[column][virtcol];
         }
+
+        return output;
+    }
+
+    FrameBuffer_t<T>* assertInState(FrameBufferState state) {
+        assert(_state == state);
+        return this;
     }
 
     unsigned int getCols() const {
-        return COLS;
+        return NUM_STEPS;
     }
 
     unsigned int getRows() const {
-        return ROWS;
+        return NUM_ROWS;
     }
 
-    FrameBufferStatus getStatus() {
-        return _status;
+    FrameBufferState getState() {
+        return _state;
     }
 
     /**
@@ -53,32 +63,36 @@ public:
      * Note this does not enforce any kind of workflow. You can
      * set this to anything no matter what state it is in right now.
      * 
-     * @param newStatus -- what the new status should be
-     * @return FrameBufferStatus -- returns the old status. 
+     * @param newState -- what the new status should be
+     * @return FrameBufferState -- returns the old status. 
      */
-    FrameBufferStatus setStatus(FrameBufferStatus newStatus) {
-        FrameBufferStatus oldStatus = _status;
-        _status = newStatus;
-        return oldStatus;
+    FrameBufferState setState(FrameBufferState newState) {
+        FrameBufferState oldState = _state;
+        _state = newState;
+        return oldState;
+    }
+    bool resetBuffer() {
+        _state = FrameBufferState::RenderingComplete;
+        return clearBuffer();
     }
 
     bool clearBuffer() {
-        if(_status == FrameBufferStatus::ReadyToRender || _status == FrameBufferStatus::Rendering || _status== FrameBufferStatus::Generating)
-            return false;
+        //if(_state == FrameBufferState::ReadyToRender || _state == FrameBufferState::Rendering || _state== FrameBufferState::Generating)
+        //    return false;
         // Use memset to clear the buffer, assuming T can be safely zeroed out.
         memset(buffer, 0, sizeof(buffer));
-        _status = FrameBufferStatus::Empty;
+        _state = FrameBufferState::Empty;
 
         return true;
     }
 
 private:
-    T buffer[COLS][ROWS];
-    const uint _segmentSize = COLS / SEGMENTS;
-    FrameBufferStatus _status;
+    T buffer[NUM_STEPS][NUM_ROWS];
+    const uint _segmentSize = NUM_LEDS_PER_SEGMENT;
+    FrameBufferState _state;
 };
 
-typedef FrameBuffer_t<CRGB, DEGREES_PER_COLUMN, NUM_ROWS, NUM_SEGMENTS> FrameBuffer;
+typedef FrameBuffer_t<CRGB> FrameBuffer;
 
 
 typedef struct

@@ -22,17 +22,18 @@ void Generator::GeneratorTaskShell(void *pvParameters)
     {
         generatorParams params;
         if (xQueueReceive(instance->_generatorQueue_h, &params, portMAX_DELAY) == pdTRUE) {
+            Serial.println("Asked to generate some crap. lets do it...");
             // validate that we are still in a good state for kicking off generation
-            if(params.framebuffer->getStatus() == FrameBufferStatus::QueuedForGeneration)
-            {
+            //if(params.framebuffer->getState() == FrameBufferState::QueuedForGeneration || params.framebuffer->getState() == FrameBufferState::Empty)
+            //{
                 // mark as generating
-                params.framebuffer->setStatus(FrameBufferStatus::Generating);
+                params.framebuffer->setState(FrameBufferState::Generating);
                 // okay buddy, generate that frame!
                 auto result = instance->GenerateFrame(params);
                 if(result) {
-                    params.framebuffer->setStatus(FrameBufferStatus::ReadyToRender);
+                    params.framebuffer->setState(FrameBufferState::ReadyToRender);
                 }
-            }
+            //}
         }
     }
     vTaskDelete(NULL);
@@ -46,11 +47,11 @@ QueueHandle_t Generator::getGeneratorQueueHandle()
 bool Generator::enqueueNextFrame(generatorParams params)
 {
     // bail if this thing isn't empty
-    if(params.framebuffer->getStatus() != FrameBufferStatus::Empty)
-        return false;
+    //if(params.framebuffer->getState() != FrameBufferState::Empty)
+    //    return false;
 
     // let the world know it is queued for generator
-    params.framebuffer->setStatus(FrameBufferStatus::QueuedForGeneration);
+    params.framebuffer->setState(FrameBufferState::QueuedForGeneration);
 
     xQueueSend(_generatorQueue_h, &params, 0);
     return true;

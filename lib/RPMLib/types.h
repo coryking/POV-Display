@@ -15,6 +15,14 @@ typedef float motorspeed_t;
 
 typedef int column_num_t;
 
+typedef int32_t step_t;
+
+
+typedef struct  {
+    step_t step = -1;
+    timestamp_t stepTimestamp;
+} rotation_position_t;
+
 /**
  * @brief compute the RPM based on the delta_t and number of magnets. delta_t is in microseconds
  * 

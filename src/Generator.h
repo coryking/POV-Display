@@ -1,6 +1,7 @@
 #ifndef __GENERATOR_H__
 #define __GENERATOR_H__
 
+#include <Arduino.h>
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>

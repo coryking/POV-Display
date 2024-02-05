@@ -34,7 +34,8 @@ public:
      */
     delta_t getDelta()
     {
-        return _avg_delta;
+        return 1000 * 1000 * 2;
+        //return _avg_delta;
     }
 
     /**
