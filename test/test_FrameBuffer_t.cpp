@@ -5,21 +5,27 @@
 
 // Test clearing the framebuffer
 void test_framebuffer_clearBuffer() {
-    FrameBuffer_t<uint8_t,1,3,10> fb;  // Using uint8_t for simplicity
+    const int steps = 3;
+    const int segments = 3;
+    const int leds_segment = 10;
+    const int rows = segments * leds_segment;
+    FrameBuffer_t<uint8_t,steps,segments,leds_segment> fb;  // Using uint8_t for simplicity
     fb.clearBuffer();           // Clear the buffer
 
     // Ensure the entire buffer is zeroed out
-    for (unsigned int col = 0; col < 1; ++col) {
-        for (unsigned int row = 0; row < NUM_ROWS; ++row) {
-            TEST_ASSERT_EQUAL_UINT8(0, fb.getBuffer()[col * NUM_ROWS + row]);
+    for (unsigned int col = 0; col < steps; ++col) {
+        for (unsigned int row = 0; row < rows; ++row) {
+            TEST_ASSERT_EQUAL_UINT8(0, fb.getBuffer()[col * rows + row]);
         }
     }
 }
 
 // Test state transitions
 void test_framebuffer_stateTransition() {
-    FrameBuffer_t<uint8_t,1,1,1> fb;
-    fb.setState(FrameBufferState::Empty);
+        const int steps = 3;
+    const int segments = 3;
+    const int leds_segment = 10;
+    FrameBuffer_t<uint8_t,steps,segments,leds_segment> fb;    fb.setState(FrameBufferState::Empty);
     TEST_ASSERT_EQUAL(FrameBufferState::Empty, fb.getState());
 
     fb.setState(FrameBufferState::ReadyToRender);
@@ -28,7 +34,10 @@ void test_framebuffer_stateTransition() {
 
 // Test buffer reset functionality
 void test_framebuffer_resetBuffer() {
-    FrameBuffer_t<uint8_t,10,1,1> fb;
+        const int steps = 3;
+    const int segments = 3;
+    const int leds_segment = 10;
+    FrameBuffer_t<uint8_t,steps,segments,leds_segment> fb;
     fb.setState(FrameBufferState::Rendering);
     fb.resetBuffer();
     TEST_ASSERT_EQUAL(FrameBufferState::Empty, fb.getState());
@@ -42,7 +51,10 @@ void test_framebuffer_resetBuffer() {
 }
 
 void test_framebuffer_getSegment() {
-    FrameBuffer_t<uint8_t,2,3,10> fb;
+    const int steps = 3;
+    const int segments = 3;
+    const int leds_segment = 10;
+    FrameBuffer_t<uint8_t,steps,segments,leds_segment> fb;
     // Initialize the frame buffer in a specific pattern
     for (int col = 0; col < fb.getCols(); col++) {
         for (int row = 0; row < fb.getRows(); row++) {
@@ -52,31 +64,32 @@ void test_framebuffer_getSegment() {
     }
 
     // Testing extraction of Segment 0 from Column 0
-    SegmentBuffer_t<uint8_t,10> segment = fb.getSegment(0, 0);
+    SegmentBuffer_t<uint8_t,leds_segment> segment = fb.getSegment(0, 0);
 
     // Expected values for Segment 2 based on the spec and initialization
-    uint8_t expected[10];
+    uint8_t expected[leds_segment];
     for (size_t i = 0; i < 10; ++i) {
-        expected[i] = i * NUM_SEGMENTS; // Matches the pattern of filling: [0,3,6] for 9 rows and 3 segments
+        expected[i] = i * segments; // Matches the pattern of filling: [0,3,6] for 9 rows and 3 segments
     }
 
     // Use TEST_ASSERT_EQUAL_UINT8_ARRAY to compare the expected array with the actual segment data
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, &segment.buffer[0], NUM_LEDS_PER_SEGMENT);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, &segment.buffer[0], leds_segment);
 
     segment = fb.getSegment(0, 2);
 
-    for (size_t i = 0; i < NUM_LEDS_PER_SEGMENT; ++i) {
-        expected[i] = 2+ i * NUM_SEGMENTS; // Matches the pattern of filling: [2,5,9] for 9 rows and 3 segments
+    for (size_t i = 0; i < leds_segment; ++i) {
+        expected[i] = 2+ i * segments; // Matches the pattern of filling: [2,5,9] for 9 rows and 3 segments
     }
 
     // Use TEST_ASSERT_EQUAL_UINT8_ARRAY to compare the expected array with the actual segment data
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, &segment.buffer[0], NUM_LEDS_PER_SEGMENT);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, &segment.buffer[0], leds_segment);
 }
 
 
 
 void test_SegmentBuffer_Assignment_And_Access() {
-    SegmentBuffer_t<int> buffer;
+    const int leds_segment = 1;
+    SegmentBuffer_t<int,leds_segment> buffer;
     buffer[0] = 42; // Use direct access to set a value
     
     TEST_ASSERT_EQUAL(42, buffer[0]); // Verify the value is correctly set
@@ -84,7 +97,11 @@ void test_SegmentBuffer_Assignment_And_Access() {
 
 
 void test_StepBuffer_Assignment_And_Access() {
-    StepBuffer_t<int> stepBuffer;
+    const int leds_segment = 1;
+    const int segments = 3;
+
+
+    StepBuffer_t<int,segments,leds_segment> stepBuffer;
     stepBuffer[0][0] = 123; // Use direct access to set a value in the first segment
     
     TEST_ASSERT_EQUAL(123, stepBuffer[0][0]); // Verify the value is correctly set
@@ -92,8 +109,10 @@ void test_StepBuffer_Assignment_And_Access() {
 
 
 void test_StepBuffer_intoSegmentBuffer() {
-    StepBuffer_t<int> stepBuffer;
-    SegmentBuffer_t<int> segbuff;
+    const int leds_segment = 2;
+    const int segments = 3;
+    StepBuffer_t<int,segments,leds_segment> stepBuffer;
+    SegmentBuffer_t<int,leds_segment> segbuff;
 
     segbuff[0] = 1;
     segbuff[1] = 2;

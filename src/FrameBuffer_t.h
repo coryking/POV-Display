@@ -75,7 +75,7 @@ public:
     }
 
 private:
-    T buffer[_NUM_STEPS][_NUM_ROWS];
+    T buffer[_NUM_STEPS][_NUM_LEDS_PER_SEGMENT * _NUM_SEGMENTS];
     FrameBufferState _state;
 };
 
