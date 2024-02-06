@@ -100,7 +100,7 @@ void RotationManager::stepTimer(TimerHandle_t xTimer)
 
     UBaseType_t uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
 
-    instance->_rotation_position.step = (instance->_rotation_position.step + 1) % NUM_STEPS;
+    instance->_rotation_position.step = (instance->_rotation_position.step + 1) % _NUM_STEPS;
     instance->_rotation_position.stepTimestamp = triggerTime;
 
     // catch step zero so we can use it for future timestamp estimations

@@ -18,7 +18,7 @@ void DisplayController::start()
     Serial.println("Starting displaycontroller");
     xTaskCreate(&DisplayController::StepHandlerTask, "TimingTask", RTOS::LARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY, &_stepTask);
     bufferManager = new FrameBufferManager_t<CRGB>();
-    _rotation_manager = new RotationManager(_stepTask, NUM_STEPS);
+    _rotation_manager = new RotationManager(_stepTask, _NUM_STEPS);
     _rotation_manager->start();
     generator->start();
     renderer->start();
