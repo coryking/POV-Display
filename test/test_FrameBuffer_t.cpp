@@ -212,7 +212,42 @@ void test_FrameBufferManager_generator()
    
 }
 
-void test_FrameBufferManager_something()
+void test_FrameBufferManager_ProperFrameOrder()
+{
+    const int steps = 3;
+    const int segments = 3;
+    const int leds_segment = 1;
+    const int arm_offset = steps / segments;
+
+    FrameBufferManager_t<int, 3, segments, arm_offset, steps, leds_segment> fbm;
+    // Initialize the frame buffer in a specific pattern
+    for (int frame = 0; frame < 3; frame++) {
+        FrameBuffer_t<int, steps, segments, leds_segment> *fb = fbm.getFrameBuffer(frame);
+        int *buff = fb->getBuffer();
+        for (int col = 0; col < fb->getCols(); col++) {
+            for (int row = 0; row < fb->getRows(); row++) {
+                buff[col * fb->getRows() + row] = frame;
+            }
+        }
+    }
+
+    int expectedFrame[steps][segments] = {{1,0,0}, {1,1,0},{1,1,1}};
+    char message[256]; // Buffer to hold the message
+
+    for (int step = 0; step < steps; step++)
+    {
+        StepBuffer_t<int, segments, leds_segment> sb = fbm.getSegmentsForStep(step);
+        for (int seg = 0; seg < segments; ++seg)
+        {
+            snprintf(message, sizeof(message), "Step: %d, Segment: %d", step, seg);
+
+            TEST_ASSERT_EQUAL_INT_MESSAGE(expectedFrame[step][seg], sb[seg][0], message);
+        }
+    }
+  
+}
+
+void test_FrameBufferManager_PrintItOut()
 {
     const int steps = 3;
     const int segments = 3;
@@ -280,7 +315,7 @@ int main(int argc, char **argv)
     RUN_TEST(test_framebuffer_getSegment);
     RUN_TEST(test_FrameBufferManager_ProperOrder);
     RUN_TEST(test_FrameBufferManager_shift);
-    RUN_TEST(test_FrameBufferManager_generator);
-    RUN_TEST(test_FrameBufferManager_something);
+    RUN_TEST(test_FrameBufferManager_PrintItOut);
+    RUN_TEST(test_FrameBufferManager_ProperFrameOrder);
     UNITY_END();
 }
