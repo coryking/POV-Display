@@ -1,9 +1,8 @@
 #ifndef __ROTATIONMANAGER_H__
 #define __ROTATIONMANAGER_H__
 
-#include <FreeRTOS.h>
-#include <timers.h>
-#include <task.h>
+#include "RTOSConfig.h"
+
 #include <cstdint>
 #include "config.h"
 #include "RPMLib.h"
@@ -21,7 +20,7 @@ class RotationManager
 public:
     RotationManager(TaskHandle_t stepTriggerTask_h, column_num_t stepsPerRotation = 360);
     void start();
-    delta_t getµsPerStep();
+    delta_t getUsPerStep();
     rotation_position_t getCurrentStep();
     /**
      * @brief Get the estimated timestamp for n number of rotations in the future
@@ -37,11 +36,8 @@ protected:
 
     static void isrWrapper()
     {
-        Serial.println("Hi from ISR");
         assert(instance != nullptr);
-
-        instance->HallEffectISR();
-    
+        instance->HallEffectISR();    
     }
 
     void setCurrentStep(step_t currentStep, timestamp_t stepTimestamp);
@@ -58,7 +54,7 @@ private:
     Smoother* _rpm;
     const step_t _stepsPerRotation;
     volatile rotation_position_t _rotation_position;
-    delta_t _µsPerStep;
+    delta_t _UsPerStep;
     // The timestemp for the last step zero. used for estimating future timestamps
     volatile timestamp_t tsOfLastZeroPoint;
     

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 
+#ifdef ARDUINO_ARCH_RP2040
 // Pin definitions
 #define HALL_PIN D0
 
@@ -12,6 +13,12 @@
 #define LED_2_DATA D4
 #define LED_3_CLOCK D5 // Outside
 #define LED_3_DATA D6
+#elif defined(ESP32)
+// all three segments are on the same strip
+#define HALL_PIN 3
+#define LED_CLOCK 7
+#define LED_DATA 9
+#endif
 
 #define DEGREES_PER_STEP 5
 #define NUM_STEPS (360/DEGREES_PER_STEP)
@@ -37,5 +44,11 @@
 
 typedef float delta_t;
 typedef uint64_t timestamp_t;
+
+#ifdef ARDUINO_ARCH_RP2040
+#define CURRENT_TIME_US() time_us_64()
+#elif defined(ESP32)
+#define CURRENT_TIME_US() esp_timer_get_time()
+#endif
 
 #endif // __CONFIG_H__

@@ -1,9 +1,7 @@
 #ifndef __DISPLAYCONTROLLER_H__
 #define __DISPLAYCONTROLLER_H__
 #include <Arduino.h>
-#include <FreeRTOS.h>
-#include <timers.h>
-#include <task.h>
+#include "RTOSConfig.h"
 #include <FastLED.h>
 #include "RotationManager.h"
 #include "FrameBufferManager.h"

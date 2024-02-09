@@ -1,9 +1,7 @@
 #ifndef __RENDERER_H__
 #define __RENDERER_H__
 
-#include <FreeRTOS.h>
-#include <task.h>
-#include <message_buffer.h>
+#include "RTOSConfig.h"
 #include <FastLED.h>
 #include "SegmentBuffer.h"
 #include "types.h"

@@ -1,12 +1,10 @@
 #include <Arduino.h>
-#include <FreeRTOS.h>
-#include <timers.h>
-#include <task.h>
+#include "RTOSConfig.h"
+
 #include <cassert>
 
 #include "RotationManager.h"
 #include "config.h"
-#include "RTOSConfig.h"
 
 // Initialize the static member
 RotationManager *RotationManager::instance = nullptr;
@@ -46,15 +44,17 @@ timestamp_t RotationManager::getEstTimeForFutureRotation(uint rotationsOut)
 
 void RotationManager::setCurrentStep(step_t currentStep, timestamp_t stepTimestamp)
 {
-    taskENTER_CRITICAL();
+    static portMUX_TYPE currentStepMUX = portMUX_INITIALIZER_UNLOCKED;
+
+    taskENTER_CRITICAL(&currentStepMUX);
     _rotation_position.step = currentStep;
     _rotation_position.stepTimestamp = stepTimestamp;
-    taskEXIT_CRITICAL();
+    taskEXIT_CRITICAL(&currentStepMUX);
 }
 
-delta_t RotationManager::getµsPerStep()
+delta_t RotationManager::getUsPerStep()
 {
-    return _µsPerStep;
+    return _UsPerStep;
 }
 
 void RotationManager::HallEffectISR()
@@ -62,14 +62,14 @@ void RotationManager::HallEffectISR()
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
     // Update the timestamp for RPM calculation
-    this->_rpm->addTimestamp(time_us_64());
+    this->_rpm->addTimestamp(CURRENT_TIME_US());
 
     // Notify the timing task that a new half-rotation has been triggered
-    //vTaskNotifyGiveFromISR(this->_timingTask_h, &xHigherPriorityTaskWoken);
+    vTaskNotifyGiveFromISR(this->_timingTask_h, &xHigherPriorityTaskWoken);
 
-    this->_µsPerStep = _rpm->getMicrosecondsPerRevolution() / static_cast<delta_t>(_stepsPerRotation);
+    this->_UsPerStep = _rpm->getMicrosecondsPerRevolution() / static_cast<delta_t>(_stepsPerRotation);
 
-    xTimerChangePeriodFromISR(this->_stepTimer_h, pdUS_TO_TICKS(this->getµsPerStep()), 0);
+    xTimerChangePeriodFromISR(this->_stepTimer_h, pdUS_TO_TICKS(this->getUsPerStep()), 0);
 
     // Yield in case a higher priority task was woken by the ISR
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -120,7 +120,7 @@ void RotationManager::stepTimer(TimerHandle_t xTimer)
 void RotationManager::adjustTimer()
 {
 
-    this->_µsPerStep = _rpm->getMicrosecondsPerRevolution() / static_cast<delta_t>(_stepsPerRotation);
+    this->_UsPerStep = _rpm->getMicrosecondsPerRevolution() / static_cast<delta_t>(_stepsPerRotation);
 
-    xTimerChangePeriod(this->_stepTimer_h, pdUS_TO_TICKS(this->getµsPerStep()), 0);
+    xTimerChangePeriod(this->_stepTimer_h, pdUS_TO_TICKS(this->getUsPerStep()), 0);
 }

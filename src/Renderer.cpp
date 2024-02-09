@@ -1,10 +1,9 @@
 #include <Arduino.h>
-#include <FreeRTOS.h>
+#include "RTOSConfig.h"
 #include <FastLED.h>
 #include <cassert>
 #include "Renderer.h"
 #include "config.h"
-#include "RTOSConfig.h"
 
 void Renderer::stepBufferRendererTask(void *pvParameters)
 {
@@ -36,9 +35,13 @@ Renderer::Renderer()
 
 void Renderer::start()
 {
+#ifdef ARDUINO_ARCH_RP2040
     FastLED.addLeds<SK9822, LED_1_DATA, LED_1_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[0][0], NUM_LEDS_PER_SEGMENT);
     FastLED.addLeds<APA102, LED_2_DATA, LED_2_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[1][0], NUM_LEDS_PER_SEGMENT);
     FastLED.addLeds<APA102, LED_3_DATA, LED_3_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[2][0], NUM_LEDS_PER_SEGMENT);
+#elif defined(ESP32)
+    FastLED.addLeds<SK9822, LED_DATA, LED_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[0][0], NUM_LEDS);
+#endif
     xTaskCreate(&Renderer::stepBufferRendererTask, "Renderer", RTOS::XLARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY, NULL);
 }
 

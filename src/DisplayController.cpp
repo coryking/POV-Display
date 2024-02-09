@@ -1,7 +1,5 @@
 #include <Arduino.h>
-#include <FreeRTOS.h>
-#include <timers.h>
-#include <task.h>
+#include "RTOSConfig.h"
 #include <cassert>
 #include "DisplayController.h"
 #include "config.h"

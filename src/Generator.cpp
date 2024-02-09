@@ -1,6 +1,6 @@
+#include "RTOSConfig.h"
 #include "Generator.h"
 #include <cassert>
-#include "RTOSConfig.h"
 
 Generator::Generator()
 {
