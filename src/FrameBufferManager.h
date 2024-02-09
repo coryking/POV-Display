@@ -13,37 +13,25 @@ class FrameBufferManager_t
 public:
     FrameBufferManager_t() : arm_offset(_NUM_STEPS/_NUM_SEGMENTS) {}
 
-    bool needsFrameShift()
-    {
-        return _needsFrameShift;
-    }
 
     void shiftFrames()
     {
-        //if (_needsFrameShift)
-        //{
-            // clear the old one out...
-            getFrameBuffer(0)->resetBuffer();
-            buffer_offset = (buffer_offset + 1) % _FRAMEBUFFERS; // Wrap around to ensure it stays within bounds
-            _needsFrameShift = false;
-        //}
+        // clear the old one out...
+        getFrameBuffer(0)->resetBuffer();
+        buffer_offset = (buffer_offset + 1) % _FRAMEBUFFERS; // Wrap around to ensure it stays within bounds
     }
 
     StepBuffer_t<T, _NUM_SEGMENTS, _NUM_LEDS_PER_SEGMENT> getSegmentsForStep(step_t step)
     {
-        int lowest_frame = 255;                // get the lowest frame needed... if it isn't 0 than we can shift the buffers around
         StepBuffer_t<T, _NUM_SEGMENTS, _NUM_LEDS_PER_SEGMENT> output;
 
         for (int seg = 0; seg < _NUM_SEGMENTS; seg++)
         {
             ColumnFrame cf = get_column_frame(seg, _NUM_SEGMENTS, step, _NUM_STEPS);
 
-            lowest_frame = std::min(cf.frame, lowest_frame);
             output[seg] = getFrameBuffer(cf.frame)->getSegment(cf.column, seg);
         }
-        // if nothing is using frame 0 (the oldest) then we need to shift frames
-        if (lowest_frame > 0)
-            _needsFrameShift = true;
+      
 
         return output;
     }
@@ -62,7 +50,6 @@ public:
 private:
     FrameBuffer_t<T, _NUM_STEPS, _NUM_SEGMENTS, _NUM_LEDS_PER_SEGMENT> frameBuffers[_FRAMEBUFFERS];
     uint8_t buffer_offset = 0;
-    bool _needsFrameShift = false;
     const int arm_offset;
 };
 
