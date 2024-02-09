@@ -234,7 +234,7 @@ void test_FrameBufferManager_ProperFrameOrder()
 
     int expectedFrame[steps][segments] = {{1, 0, 0}, {1, 1, 0}, {1, 1, 1}};
     char message[256]; // Buffer to hold the message
-
+    TEST_ASSERT_FALSE_MESSAGE(fbm.needsFrameShift(), "Pre-Thing Frame Shift Not Needed");
     for (int step = 0; step < steps; step++)
     {
         StepBuffer_t<int, segments, leds_segment> sb = fbm.getSegmentsForStep(step);
@@ -245,6 +245,7 @@ void test_FrameBufferManager_ProperFrameOrder()
             TEST_ASSERT_EQUAL_INT_MESSAGE(expectedFrame[step][seg], sb[seg][0], message);
         }
     }
+    TEST_ASSERT_TRUE_MESSAGE(fbm.needsFrameShift(), "Ready for frame shift?");
 }
 
 void test_FrameBufferManager_PrintItOut()

@@ -4,6 +4,7 @@
 #include "FrameBuffer_t.h"
 #include "SegmentBuffer.h"
 #include "types.h"
+#include "utils.h"
 
 #define NUM_FRAMEBUFFERS 3
 template <typename T, size_t _FRAMEBUFFERS, size_t _NUM_SEGMENTS, size_t _NUM_STEPS, size_t _NUM_LEDS_PER_SEGMENT>
@@ -33,24 +34,17 @@ public:
         int lowest_frame = 255;                // get the lowest frame needed... if it isn't 0 than we can shift the buffers around
         StepBuffer_t<T, _NUM_SEGMENTS, _NUM_LEDS_PER_SEGMENT> output;
 
-        /*for (int seg = 0; seg < _NUM_SEGMENTS; seg++)
+        for (int seg = 0; seg < _NUM_SEGMENTS; seg++)
         {
+            ColumnFrame cf = get_column_frame(seg, _NUM_SEGMENTS, step, _NUM_STEPS);
 
-            int arm_position = arm0_postion - (arm_offset * seg);
-            // pos(0) = 0 -> 0 - (1 * 0) = 0
-            // pos(1)
-            column_num_t column_index = arm_position % _NUM_STEPS;
-            int frame = static_cast<int>(arm_position / _NUM_STEPS);
-            int frame_index = 1-std::abs(frame);
-
-            lowest_frame = std::min(frame_index, lowest_frame);
-            //output[seg] = getFrameBuffer(frame).assertInState(FrameBufferState::ReadyToRender)->getSegment(column, i);
-            output[seg] = getFrameBuffer(frame_index)->getSegment(column_index, seg); // Ensure column is within bounds
+            lowest_frame = std::min(cf.frame, lowest_frame);
+            output[seg] = getFrameBuffer(cf.frame)->getSegment(cf.column, seg);
         }
         // if nothing is using frame 0 (the oldest) then we need to shift frames
         if (lowest_frame > 0)
             _needsFrameShift = true;
-*/
+
         return output;
     }
 
