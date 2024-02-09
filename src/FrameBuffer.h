@@ -6,7 +6,7 @@
 #include <FastLED.h>
 
 
-typedef FrameBuffer_t<CRGB> FrameBuffer;
+typedef FrameBuffer_t<CRGB,NUM_STEPS,NUM_SEGMENTS, NUM_LEDS_PER_SEGMENT> FrameBuffer;
 
 
 typedef struct

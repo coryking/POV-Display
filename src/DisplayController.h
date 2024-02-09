@@ -34,7 +34,7 @@ private:
     void handleFrameShift(rotation_position_t rotationPosition);
 
     RotationManager* _rotation_manager;
-    FrameBufferManager_t<CRGB>* bufferManager;
+    FrameBufferManager_t<CRGB, 3, NUM_SEGMENTS, NUM_STEPS, NUM_LEDS_PER_SEGMENT> *bufferManager;
     Renderer* renderer;
     Generator* generator;
 

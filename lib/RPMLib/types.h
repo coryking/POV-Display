@@ -17,14 +17,14 @@ typedef int column_num_t;
 
 typedef int32_t step_t;
 
-
-struct rotation_position_t {
+struct rotation_position_t
+{
     step_t step;
     timestamp_t stepTimestamp;
 
     rotation_position_t() : step(-1), stepTimestamp(0) {}
+    rotation_position_t(step_t s, timestamp_t st) : step(s), stepTimestamp(st) {}
 };
-
 
 /**
  * @brief compute the RPM based on the delta_t and number of magnets. delta_t is in microseconds

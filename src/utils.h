@@ -4,56 +4,87 @@
 #include <cmath>
 #include "types.h"
 
-// this is to mimic how python or excel handle the modulo operator
-int mod(int a, int b) {
-
-    int result = a % b;
-    if (result < 0) {
-        result += b;
-    }
-    return result;
-}
-
-// this is to mimic how python or excel handle division
-int floorDiv(int dividend, int divisor) {
-    assert(divisor > 0); // Ensure divisor is positive.
-    if (dividend >= 0) {
-        return dividend / divisor;
-    } else {
-        // Adjust for negative dividends to achieve floor division.
-        return (dividend - divisor + 1) / divisor;
-    }
-}
-
-
-struct ColumnFrame {
+/**
+ * @struct ColumnFrame
+ * @brief Holds information about a column and its corresponding frame.
+ *
+ * @var ColumnFrame::column
+ * Column number.
+ * @var ColumnFrame::frame
+ * Frame number.
+ */
+struct ColumnFrame
+{
     column_num_t column;
     int frame;
 };
 
-int compute_postition_of_arm(step_t step, uint8_t arm, uint16_t arm_offset) {
-    return step - (arm_offset * arm);
-}
-int compute_arm_column(int arm_position, uint8_t total_steps) {
-    
-    return mod(arm_position, static_cast<int>(total_steps));
-}
-int compute_frame_offset(int arm_position, step_t total_steps) {
-    return floorDiv(arm_position, total_steps);
-}
+/**
+ * @brief Calculates the modulo operation, mimicking Python's or Excel's behavior.
+ *
+ * @param a Dividend.
+ * @param b Divisor.
+ * @return int The result of the modulo operation.
+ */
+int mod(int a, int b);
 
-int compute_frame_number(int arm_position, step_t total_steps) {
-    return 1-std::abs(compute_frame_offset(arm_position, total_steps));
-}
+/**
+ * @brief Performs floor division, similar to Python's or Excel's behavior.
+ *
+ * @param dividend The number to be divided.
+ * @param divisor The number by which to divide.
+ * @return int The floor division result.
+ */
+int floorDiv(int dividend, int divisor);
 
-ColumnFrame get_column_frame(uint8_t segment, uint8_t segments, step_t step, step_t total_steps)
-{
-    int arm_position = compute_postition_of_arm(step, segment, segments/total_steps);
-    int frame = compute_frame_number(arm_position, total_steps);
-    column_num_t column = compute_arm_column(arm_position, total_steps);
+/**
+ * @brief Computes the position of an arm given a step, arm index, and arm offset.
+ *
+ * @param step Current step.
+ * @param arm Index of the arm.
+ * @param arm_offset Offset for the arm.
+ * @return int The computed position of the arm.
+ */
+int compute_postition_of_arm(step_t step, uint8_t arm, uint16_t arm_offset);
 
-    return ColumnFrame{.column = column, .frame = frame};
+/**
+ * @brief Computes the column based on the arm position and total steps.
+ *
+ * @param arm_position The current position of the arm.
+ * @param total_steps The total number of steps.
+ * @return int The computed column number.
+ */
+int compute_arm_column(int arm_position, uint8_t total_steps);
 
-}
+/**
+ * @brief Calculates the frame offset for an arm position.
+ *
+ * @param arm_position The current position of the arm.
+ * @param total_steps The total number of steps.
+ * @return int The computed frame offset.
+ */
+int compute_frame_offset(int arm_position, step_t total_steps);
+
+/**
+ * @brief Computes the frame number based on the arm position and total steps.
+ *
+ * @param arm_position The current position of the arm.
+ * @param total_steps The total number of steps.
+ * @return int The computed frame number.
+ */
+int compute_frame_number(int arm_position, step_t total_steps);
+
+/**
+ * @brief Generates a ColumnFrame struct based on the segment, total segments, step, and total steps.
+ *
+ * @param segment The current segment.
+ * @param segments The total number of segments.
+ * @param step The current step.
+ * @param total_steps The total number of steps.
+ * @return ColumnFrame The computed column and frame.
+ */
+ColumnFrame get_column_frame(uint8_t segment, uint8_t segments, step_t step, step_t total_steps);
+
+// descriptions by chatgpt4. Who knows how correct they are, I haven't read them!
 
 #endif // __UTILS_H__
