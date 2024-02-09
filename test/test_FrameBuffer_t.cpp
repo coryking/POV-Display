@@ -2,27 +2,30 @@
 #include "FrameBuffer_t.h" // Adjust include path as necessary
 #include "FrameBufferManager.h"
 #include "config.h" // Your configuration file, adjust as necessary
+#include "utils.h"
 #include <unity.h>
 #include <cstdio>
 #include <cstring>
 
-
-template<typename T, size_t _NUM_FRAMEBUFFERS, size_t _NUM_SEGMENTS, size_t _ARM_OFFSET, size_t _NUM_STEPS, size_t _NUM_LEDS_PER_SEGMENT>
-FrameBufferManager_t<T, _NUM_FRAMEBUFFERS, _NUM_SEGMENTS, _ARM_OFFSET, _NUM_STEPS, _NUM_LEDS_PER_SEGMENT> initializeFrameBufferManager() {
-    FrameBufferManager_t<T, _NUM_FRAMEBUFFERS, _NUM_SEGMENTS, _ARM_OFFSET, _NUM_STEPS, _NUM_LEDS_PER_SEGMENT> fbm;
+template <typename T, size_t _NUM_FRAMEBUFFERS, size_t _NUM_SEGMENTS, size_t _NUM_STEPS, size_t _NUM_LEDS_PER_SEGMENT>
+FrameBufferManager_t<T, _NUM_FRAMEBUFFERS, _NUM_SEGMENTS, _NUM_STEPS, _NUM_LEDS_PER_SEGMENT> initializeFrameBufferManager()
+{
+    FrameBufferManager_t<T, _NUM_FRAMEBUFFERS, _NUM_SEGMENTS, _NUM_STEPS, _NUM_LEDS_PER_SEGMENT> fbm;
     // Initialize the frame buffer in a specific pattern
-    for (int frame = 0; frame < _NUM_FRAMEBUFFERS; frame++) {
+    for (int frame = 0; frame < _NUM_FRAMEBUFFERS; frame++)
+    {
         FrameBuffer_t<T, _NUM_STEPS, _NUM_SEGMENTS, _NUM_LEDS_PER_SEGMENT> *fb = fbm.getFrameBuffer(frame);
         T *buff = fb->getBuffer();
-        for (int col = 0; col < fb->getCols(); col++) {
-            for (int row = 0; row < fb->getRows(); row++) {
+        for (int col = 0; col < fb->getCols(); col++)
+        {
+            for (int row = 0; row < fb->getRows(); row++)
+            {
                 buff[col * fb->getRows() + row] = T({col, row, frame}); // Adjust initialization as needed
             }
         }
     }
     return fbm;
 }
-
 
 // Test clearing the framebuffer
 void test_framebuffer_clearBuffer()
@@ -167,9 +170,8 @@ void test_FrameBufferManager_ProperOrder()
     const int steps = 4;
     const int segments = 2;
     const int leds_segment = 2;
-    const int arm_offset = steps / segments;
 
-    auto fbm = initializeFrameBufferManager<BigJoe, 3, segments, arm_offset, steps, leds_segment>();
+    auto fbm = initializeFrameBufferManager<BigJoe, 3, segments, steps, leds_segment>();
 
     auto fb = fbm.getFrameBuffer(0);
     TEST_ASSERT_EQUAL_UINT8(0, fb->getBuffer()[0].f);
@@ -184,9 +186,8 @@ void test_FrameBufferManager_shift()
     const int steps = 4;
     const int segments = 2;
     const int leds_segment = 2;
-    const int arm_offset = steps / segments;
 
-    auto fbm = initializeFrameBufferManager<BigJoe, 3, segments, arm_offset, steps, leds_segment>();
+    auto fbm = initializeFrameBufferManager<BigJoe, 3, segments, steps, leds_segment>();
 
     fbm.shiftFrames();
     auto fb = fbm.getFrameBuffer(0);
@@ -197,19 +198,16 @@ void test_FrameBufferManager_shift()
     TEST_ASSERT_EQUAL_UINT8(0, fb->getBuffer()[0].f);
 }
 
-
 void test_FrameBufferManager_generator()
 {
     const int steps = 4;
     const int segments = 2;
     const int leds_segment = 2;
-    const int arm_offset = steps / segments;
 
-    auto fbm = initializeFrameBufferManager<BigJoe, 3, segments, arm_offset, steps, leds_segment>();
+    auto fbm = initializeFrameBufferManager<BigJoe, 3, segments, steps, leds_segment>();
 
     auto fb = fbm.getGeneratorFrame();
     TEST_ASSERT_EQUAL_INT(2, fb->getBuffer()[0].f);
-   
 }
 
 void test_FrameBufferManager_ProperFrameOrder()
@@ -219,19 +217,22 @@ void test_FrameBufferManager_ProperFrameOrder()
     const int leds_segment = 1;
     const int arm_offset = steps / segments;
 
-    FrameBufferManager_t<int, 3, segments, arm_offset, steps, leds_segment> fbm;
+    FrameBufferManager_t<int, 3, segments, steps, leds_segment> fbm;
     // Initialize the frame buffer in a specific pattern
-    for (int frame = 0; frame < 3; frame++) {
+    for (int frame = 0; frame < 3; frame++)
+    {
         FrameBuffer_t<int, steps, segments, leds_segment> *fb = fbm.getFrameBuffer(frame);
         int *buff = fb->getBuffer();
-        for (int col = 0; col < fb->getCols(); col++) {
-            for (int row = 0; row < fb->getRows(); row++) {
+        for (int col = 0; col < fb->getCols(); col++)
+        {
+            for (int row = 0; row < fb->getRows(); row++)
+            {
                 buff[col * fb->getRows() + row] = frame;
             }
         }
     }
 
-    int expectedFrame[steps][segments] = {{1,0,0}, {1,1,0},{1,1,1}};
+    int expectedFrame[steps][segments] = {{1, 0, 0}, {1, 1, 0}, {1, 1, 1}};
     char message[256]; // Buffer to hold the message
 
     for (int step = 0; step < steps; step++)
@@ -244,7 +245,6 @@ void test_FrameBufferManager_ProperFrameOrder()
             TEST_ASSERT_EQUAL_INT_MESSAGE(expectedFrame[step][seg], sb[seg][0], message);
         }
     }
-  
 }
 
 void test_FrameBufferManager_PrintItOut()
@@ -252,9 +252,8 @@ void test_FrameBufferManager_PrintItOut()
     const int steps = 3;
     const int segments = 3;
     const int leds_segment = 3;
-    const int arm_offset = steps / segments;
 
-   auto fbm = initializeFrameBufferManager<BigJoe, 3, segments, arm_offset, steps, leds_segment>();
+    auto fbm = initializeFrameBufferManager<BigJoe, 3, segments, steps, leds_segment>();
 
     char message[256]; // Buffer to hold the message
 
@@ -293,6 +292,153 @@ void test_FrameBufferManager_PrintItOut()
      } */
 }
 
+void test_Utils_arm_position()
+{
+    int steps = 3;
+    int arms = 3;
+    int positions[3][3] = {{0, -1, -2}, {1, 0, -1}, {2, 1, 0}};
+
+    char message[256]; // Buffer to hold the message
+
+    for (int step = 0; step < steps; step++)
+    {
+        for (int arm = 0; arm < arms; arm++)
+        {
+            snprintf(message, sizeof(message), "Step: %d, Arm: %d", step, arm);
+
+            int position = compute_postition_of_arm(step, arm, 1);
+            TEST_ASSERT_EQUAL_INT_MESSAGE(positions[step][arm], position, message);
+        }
+    }
+}
+
+void test_Utils_compute_arm_column()
+{
+    const int steps = 3;
+    const int arms = 3;
+    int arm_positions[steps][arms] = {{0, -1, -2}, {1, 0, -1}, {2, 1, 0}};
+    int expected_outputs[steps][arms] = {{0, 2, 1}, {1, 0, 2}, {2, 1, 0}};
+
+    char message[256]; // Buffer to hold the message
+
+    for (int step = 0; step < steps; step++)
+    {
+        for (int arm = 0; arm < arms; arm++)
+        {
+            int arm_position = arm_positions[step][arm];
+            snprintf(message, sizeof(message), "Step: %d, Arm: %d, Arm Pos: %d", step, arm, arm_position);
+
+            int column_number = compute_arm_column(arm_position, steps);
+            int expected_output = expected_outputs[step][arm];
+            TEST_ASSERT_EQUAL_INT_MESSAGE(expected_output, column_number, message);
+        }
+    }
+}
+
+void test_Utils_compute_frame_offset()
+{
+    const int steps = 3;
+    const int arms = 3;
+    int arm_positions[steps][arms] = {{0, -1, -2}, {1, 0, -1}, {2, 1, 0}};
+    int expected_outputs[steps][arms] = {{0, -1, -1}, {0, 0, -1}, {0, 0, 0}};
+
+    char message[256]; // Buffer to hold the message
+
+    for (int step = 0; step < steps; step++)
+    {
+        for (int arm = 0; arm < arms; arm++)
+        {
+            int arm_position = arm_positions[step][arm];
+
+            snprintf(message, sizeof(message), "Step: %d, Arm: %d, Input: %d", step, arm, arm_position);
+
+            int column_number = compute_frame_offset(arm_position, steps);
+            int expected_output = expected_outputs[step][arm];
+            TEST_ASSERT_EQUAL_INT_MESSAGE(expected_output, column_number, message);
+        }
+    }
+}
+
+void test_Utils_compute_frame_number()
+{
+    const int steps = 3;
+    const int arms = 3;
+    int arm_positions[steps][arms] = {{0, -1, -2}, {1, 0, -1}, {2, 1, 0}};
+    int expected_outputs[steps][arms] = {{1, 0, 0}, {1, 1, 0}, {1, 1, 1}};
+
+    char message[256]; // Buffer to hold the message
+
+    for (int step = 0; step < steps; step++)
+    {
+        for (int arm = 0; arm < arms; arm++)
+        {
+            int arm_position = arm_positions[step][arm];
+
+            snprintf(message, sizeof(message), "Step: %d, Arm: %d, Input: %d", step, arm, arm_position);
+
+            int column_number = compute_frame_number(arm_position, steps);
+            int expected_output = expected_outputs[step][arm];
+            TEST_ASSERT_EQUAL_INT_MESSAGE(expected_output, column_number, message);
+        }
+    }
+}
+
+void test_get_column_frame()
+{
+    const int steps = 3;
+    const int arms = 3;
+
+    //int arm_positions[steps][arms] = {{0, -1, -2}, {1, 0, -1}, {2, 1, 0}};
+    ColumnFrame expected_outputs[steps][arms] = {{
+                                                     {0, 1},
+                                                     {2, 0},
+                                                     {1, 0},
+                                                 },
+                                                 {
+                                                     {1, 1},
+                                                     {0, 1},
+                                                     {2, 0},
+                                                 },
+                                                 {
+                                                     {2, 1},
+                                                     {1, 1},
+                                                     {0, 1},
+                                                 }};
+    char message[256]; // Buffer to hold the message
+
+    for (int step = 0; step < steps; step++)
+    {
+        for (int arm = 0; arm < arms; arm++)
+        {
+
+            ColumnFrame cf = get_column_frame(arm, arms, step, steps);
+            ColumnFrame expected_output = expected_outputs[step][arm];
+            snprintf(message, sizeof(message), "Column, Step: %d, Arm: %d", step, arm);
+
+            TEST_ASSERT_EQUAL_MESSAGE(cf.column, expected_output.column, message);
+            snprintf(message, sizeof(message), "Frame, Step: %d, Arm: %d", step, arm);
+            TEST_ASSERT_EQUAL_MESSAGE(cf.frame, expected_output.frame, message);
+            //TEST_ASSERT_EQUAL_INT_MESSAGE(expected_output, column_number, message);
+        }
+    }
+}
+void test_mod_positive_dividend(void)
+{
+    TEST_ASSERT_EQUAL_INT(1, mod(4, 3));
+    TEST_ASSERT_EQUAL_INT(0, mod(3, 3));
+}
+
+void test_mod_negative_dividend(void)
+{
+    TEST_ASSERT_EQUAL_INT(2, mod(-1, 3));
+    TEST_ASSERT_EQUAL_INT(1, mod(-5, 3));
+}
+
+void test_mod_with_zero_dividend(void)
+{
+    TEST_ASSERT_EQUAL_INT(0, mod(0, 3));
+}
+
 void setUp(void)
 {
     // Set up any required structures here
@@ -317,5 +463,13 @@ int main(int argc, char **argv)
     RUN_TEST(test_FrameBufferManager_shift);
     RUN_TEST(test_FrameBufferManager_PrintItOut);
     RUN_TEST(test_FrameBufferManager_ProperFrameOrder);
+    RUN_TEST(test_Utils_arm_position);
+    RUN_TEST(test_Utils_compute_arm_column);
+    RUN_TEST(test_Utils_compute_frame_offset);
+    RUN_TEST(test_Utils_compute_frame_number);
+    RUN_TEST(test_mod_positive_dividend);
+    RUN_TEST(test_mod_negative_dividend);
+    RUN_TEST(test_mod_with_zero_dividend);
+    RUN_TEST(test_get_column_frame);
     UNITY_END();
 }
