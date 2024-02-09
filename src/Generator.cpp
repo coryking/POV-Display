@@ -1,6 +1,9 @@
 #include "RTOSConfig.h"
 #include "Generator.h"
 #include <cassert>
+#include "esp_log.h"
+
+static const char *TAG = "Generator";
 
 Generator::Generator()
 {
@@ -22,16 +25,17 @@ void Generator::GeneratorTaskShell(void *pvParameters)
     {
         generatorParams params;
         if (xQueueReceive(instance->_generatorQueue_h, &params, portMAX_DELAY) == pdTRUE) {
-            Serial.println("Asked to generate some crap. lets do it...");
+            ESP_LOGD(TAG, "Time to generate!");
             // validate that we are still in a good state for kicking off generation
-            //if(params.framebuffer->getState() == FrameBufferState::QueuedForGeneration || params.framebuffer->getState() == FrameBufferState::Empty)
+            // if(params.framebuffer->getState() == FrameBufferState::QueuedForGeneration || params.framebuffer->getState() == FrameBufferState::Empty)
             //{
-                // mark as generating
-                params.framebuffer->setState(FrameBufferState::Generating);
-                // okay buddy, generate that frame!
-                auto result = instance->GenerateFrame(params);
-                if(result) {
-                    params.framebuffer->setState(FrameBufferState::ReadyToRender);
+            // mark as generating
+            params.framebuffer->setState(FrameBufferState::Generating);
+            // okay buddy, generate that frame!
+            auto result = instance->GenerateFrame(params);
+            if (result)
+            {
+                params.framebuffer->setState(FrameBufferState::ReadyToRender);
                 }
             //}
         }

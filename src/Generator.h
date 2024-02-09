@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "RTOSConfig.h" 
+#include "types.h"
 #include "FrameBuffer.h"
 
 class Generator

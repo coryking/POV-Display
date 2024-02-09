@@ -1,10 +1,7 @@
 #include <SPI.h>
 
-// #define FASTLED_ALL_PINS_HARDWARE_SPI
-// #define FASTLED_ESP32_SPI_BUS HSPI
-
 #include "RTOSConfig.h"
-#include <FastLED.h>
+#include "FastLEDConfig.h"
 #include "config.h"
 #include "DisplayController.h"
 #include "FrameBuffer.h"

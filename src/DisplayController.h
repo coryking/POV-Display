@@ -2,7 +2,7 @@
 #define __DISPLAYCONTROLLER_H__
 #include <Arduino.h>
 #include "RTOSConfig.h"
-#include <FastLED.h>
+#include "FastLEDConfig.h" 
 #include "RotationManager.h"
 #include "FrameBufferManager.h"
 #include "Renderer.h"

@@ -4,6 +4,9 @@
 #include "DisplayController.h"
 #include "config.h"
 #include "RTOSConfig.h"
+#include "esp_log.h"
+
+static const char *TAG = "DisplayController";
 
 DisplayController::DisplayController()
 {
@@ -13,14 +16,14 @@ DisplayController::DisplayController()
 
 void DisplayController::start()
 {
-    Serial.println("Starting displaycontroller");
+    ESP_LOGI(TAG,"Starting displaycontroller");
     xTaskCreate(&DisplayController::StepHandlerTask, "TimingTask", RTOS::LARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY, &_stepTask);
     bufferManager = new FrameBufferManager_t<CRGB, 3, NUM_SEGMENTS, NUM_STEPS, NUM_LEDS_PER_SEGMENT>();
     _rotation_manager = new RotationManager(_stepTask, NUM_STEPS);
     _rotation_manager->start();
     generator->start();
     renderer->start();
-    Serial.println("Everything is up");
+    ESP_LOGI(TAG, "Everything is up");
 }
 
 TaskHandle_t DisplayController::getStepTaskHandler()
@@ -40,7 +43,7 @@ void DisplayController::StepHandlerTask(void *pvParameters)
         {
 
             rotation_position_t pos = instance->_rotation_manager->getCurrentStep();
-            Serial.printf("Hello from step task %d ts: %llu\n", pos.step, pos.stepTimestamp);
+            ESP_LOGV(TAG, "Hello from step task %d ts: %llu\n", pos.step, pos.stepTimestamp);
             instance->invokeRenderer(pos);
             instance->handleFrameShift(pos);
         }
@@ -58,14 +61,14 @@ void DisplayController::handleFrameShift(rotation_position_t rotationPosition)
 {
     if (rotationPosition.step == NUM_STEPS-1)
     {
-        Serial.println("Needs frame shift, eh?");
+        ESP_LOGD(TAG, "Needs frame shift, eh?");
         bufferManager->shiftFrames();
-        Serial.println("shifted");
+        ESP_LOGV(TAG, "shifted");
         FrameBuffer *genBuffer = bufferManager->getGeneratorFrame();
-        Serial.println("got frame to generate");
+        ESP_LOGV(TAG, "got frame to generate");
         genBuffer->clearBuffer();
-        Serial.println("cleared buffer");
+        ESP_LOGV(TAG, "cleared buffer");
         generator->enqueueNextFrame({_rotation_manager->getEstTimeForFutureRotation(1), genBuffer});
-        Serial.println("Enqueued stuff");
+        ESP_LOGD(TAG, "Done, Enqueued stuff");
     }
 }

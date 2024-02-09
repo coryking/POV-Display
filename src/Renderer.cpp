@@ -1,9 +1,12 @@
 #include <Arduino.h>
 #include "RTOSConfig.h"
-#include <FastLED.h>
+#include "FastLEDConfig.h" 
 #include <cassert>
 #include "Renderer.h"
 #include "config.h"
+#include "esp_log.h"
+
+static const char *TAG = "Renderer";
 
 void Renderer::stepBufferRendererTask(void *pvParameters)
 {
@@ -15,7 +18,7 @@ void Renderer::stepBufferRendererTask(void *pvParameters)
         StepBuffer_t<CRGB, NUM_SEGMENTS,NUM_LEDS_PER_SEGMENT> stepBuffer;
         if (xMessageBufferReceive(instance->renderMessageBuffer_h, &stepBuffer, sizeof(StepBuffer_t<CRGB, NUM_SEGMENTS, NUM_LEDS_PER_SEGMENT>), pdMS_TO_TICKS(20)))
         {
-            Serial.println("rendering shit, dawg");
+            ESP_LOGD(TAG, "Rendering Crap");
             FastLED.clear();
             for(int seg=0; seg < NUM_SEGMENTS; ++seg) {
                 for(int led=0; led < NUM_LEDS_PER_SEGMENT; led++) {
@@ -23,7 +26,7 @@ void Renderer::stepBufferRendererTask(void *pvParameters)
                 }
             }
             FastLED.show();
-            Serial.println("done renderin shit");
+            ESP_LOGD(TAG, "Done Crap");
         }
     }
 }

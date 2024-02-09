@@ -5,6 +5,7 @@
 #include <float.h>
 #include <cmath>
 
+//typedef float delta_t;
 typedef float delta_t;
 typedef uint64_t timestamp_t;
 

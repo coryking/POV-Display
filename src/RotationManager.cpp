@@ -5,19 +5,14 @@
 
 #include "RotationManager.h"
 #include "config.h"
+#include "esp_log.h"
 
-// Initialize the static member
-RotationManager *RotationManager::instance = nullptr;
-
-static void isrHandler() {
-    RotationManager::instance->HallEffectISR();
-}
+static const char *TAG = "RotationManager";
 
 RotationManager::RotationManager(TaskHandle_t stepTriggerTask_h, column_num_t stepsPerRotation) : _stepTriggerTask_h(stepTriggerTask_h), _stepsPerRotation(stepsPerRotation)
 {
     assert(IS_DIVISIBLE_BY_360(stepsPerRotation));
 
-    instance=this;
     _rpm = new Smoother(micros());
     
 }
@@ -29,7 +24,7 @@ void RotationManager::start()
     xTaskCreate(&RotationManager::timingTask, "TimingTask", RTOS::LARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY, &_timingTask_h);
     this->_stepTimer_h = xTimerCreate("StepTimer", pdUS_TO_TICKS(1000), pdTRUE, this, &RotationManager::stepTimer);
     adjustTimer();
-    Serial.println("Done with rotationmanager start");
+    ESP_LOGI(TAG,"Done with rotationmanager start");
 }
 
 rotation_position_t RotationManager::getCurrentStep()
@@ -52,27 +47,49 @@ void RotationManager::setCurrentStep(step_t currentStep, timestamp_t stepTimesta
     taskEXIT_CRITICAL(&currentStepMUX);
 }
 
-delta_t RotationManager::getUsPerStep()
+esp_err_t RotationManager::setupISR()
 {
-    return _UsPerStep;
+    gpio_num_t pin = static_cast<gpio_num_t>(HALL_PIN);
+
+    gpio_config_t io_conf;
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pin_bit_mask = (1ULL << HALL_PIN);
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+    gpio_config(&io_conf);
+
+    intr_handle_t gpio_isr_handle; // Declare the handle
+
+    ESP_ERROR_CHECK(gpio_install_isr_service(0));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(pin, &RotationManager::onHallSensorTriggerISR, this));
+
+    return ESP_OK;
 }
 
-void RotationManager::HallEffectISR()
+void IRAM_ATTR RotationManager::onHallSensorTriggerISR(void *args)
 {
+    RotationManager *instance = static_cast<RotationManager *>(args);
+
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
     // Update the timestamp for RPM calculation
-    this->_rpm->addTimestamp(CURRENT_TIME_US());
+    instance->_rpm->addTimestamp(CURRENT_TIME_US());
 
     // Notify the timing task that a new half-rotation has been triggered
-    vTaskNotifyGiveFromISR(this->_timingTask_h, &xHigherPriorityTaskWoken);
+    vTaskNotifyGiveFromISR(instance->_timingTask_h, &xHigherPriorityTaskWoken);
 
-    this->_UsPerStep = _rpm->getMicrosecondsPerRevolution() / static_cast<delta_t>(_stepsPerRotation);
+    instance->_UsPerStep = instance->_rpm->getMicrosecondsPerRevolution() / static_cast<delta_t>(instance->_stepsPerRotation);
 
-    xTimerChangePeriodFromISR(this->_stepTimer_h, pdUS_TO_TICKS(this->getUsPerStep()), 0);
+    xTimerChangePeriodFromISR(instance->_stepTimer_h, pdUS_TO_TICKS(instance->getUsPerStep()), 0);
 
     // Yield in case a higher priority task was woken by the ISR
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+delta_t RotationManager::getUsPerStep()
+{
+    return _UsPerStep;
 }
 
 void RotationManager::timingTask(void *pvParameters)
@@ -121,6 +138,6 @@ void RotationManager::adjustTimer()
 {
 
     this->_UsPerStep = _rpm->getMicrosecondsPerRevolution() / static_cast<delta_t>(_stepsPerRotation);
-
+    ESP_LOGI(TAG, "Setting timer to %f", this->getUsPerStep());
     xTimerChangePeriod(this->_stepTimer_h, pdUS_TO_TICKS(this->getUsPerStep()), 0);
 }

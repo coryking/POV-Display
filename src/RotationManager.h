@@ -29,20 +29,17 @@ public:
      * @return timestamp_t estimated timestamp for this future rotation
      */
     timestamp_t getEstTimeForFutureRotation(uint rotationsOut);
-    void HallEffectISR();
     static RotationManager *instance;
 
 protected:
 
-    static void isrWrapper()
-    {
-        assert(instance != nullptr);
-        instance->HallEffectISR();    
-    }
-
     void setCurrentStep(step_t currentStep, timestamp_t stepTimestamp);
 
 private:
+    esp_err_t setupISR();
+
+    static void IRAM_ATTR onHallSensorTriggerISR(void *args);
+
     static void timingTask(void *pvParameters);
     
     static void stepTimer(TimerHandle_t xTimer);
@@ -54,7 +51,7 @@ private:
     Smoother* _rpm;
     const step_t _stepsPerRotation;
     volatile rotation_position_t _rotation_position;
-    delta_t _UsPerStep;
+    delta_t _UsPerStep = 10.0;
     // The timestemp for the last step zero. used for estimating future timestamps
     volatile timestamp_t tsOfLastZeroPoint;
     

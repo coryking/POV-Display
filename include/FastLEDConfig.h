@@ -1,0 +1,8 @@
+#ifndef __FASTLEDCONFIG_H__
+#define __FASTLEDCONFIG_H__
+
+#define FASTLED_ALL_PINS_HARDWARE_SPI
+#define FASTLED_ESP32_SPI_BUS FSPI
+
+#include <FastLED.h>
+#endif // __FASTLEDCONFIG_H__

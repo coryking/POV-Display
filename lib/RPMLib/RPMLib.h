@@ -12,7 +12,7 @@ template<size_t _NUM_REVOLUTIONS, size_t _NUM_MAGENTS>
 class RPMSmoother_t
 {
 public:
-    RPMSmoother_t(timestamp_t currentTimestamp) : _lastTimestamp(currentTimestamp), _avg(0.1)
+    RPMSmoother_t(timestamp_t currentTimestamp) : _lastTimestamp(currentTimestamp)//, _avg(0.1)
     {
     }
 
@@ -34,8 +34,7 @@ public:
      */
     delta_t getDelta()
     {
-        return 1000 * 1000 * 2;
-        //return _avg_delta;
+        return _avg_delta;
     }
 
     /**
@@ -53,10 +52,10 @@ public:
 
 private:
     // one sample per magnet * number of revolutions to average over...
-    //RollingAverage<delta_t, _NUM_REVOLUTIONS * _NUM_MAGENTS> _avg;
-    ExponentialMovingAverage<delta_t> _avg;
+    RollingAverage<double, _NUM_REVOLUTIONS * _NUM_MAGENTS> _avg;
+    //ExponentialMovingAverage<delta_t> _avg;
     volatile timestamp_t _lastTimestamp; // gotta keep this shit volalitile 'cause it will probably get messed with in some ISR
-    delta_t _avg_delta = 0.0;
+    delta_t _avg_delta = 10;
 };
 
 #endif // __RPM_H__

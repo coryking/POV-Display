@@ -42,8 +42,6 @@
 #define RPM_SMOOTHING_LEVEL 10
 #define NUM_MAGNETS 2
 
-typedef float delta_t;
-typedef uint64_t timestamp_t;
 
 #ifdef ARDUINO_ARCH_RP2040
 #define CURRENT_TIME_US() time_us_64()

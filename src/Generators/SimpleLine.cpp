@@ -1,8 +1,12 @@
-#include <FastLED.h>
 #include "SimpleLine.h"
+#include "esp_log.h"
+
+
+static const char *TAG = "SimpleLine";
+
 bool SimpleLine::GenerateFrame(generatorParams params)
 {
-    Serial.println("Here inside generate frme");
+    ESP_LOGD(TAG,"Here inside generate frme");
     CRGB *fb = params.framebuffer->getBuffer();
     _currentRow = (_currentRow + 1) % params.framebuffer->getRows();
     _currentPalleteIndex = (_currentPalleteIndex + 1) & 255;
@@ -13,7 +17,7 @@ bool SimpleLine::GenerateFrame(generatorParams params)
 
         fb[index] = color;
     }
-    Serial.println("okay done");
+    ESP_LOGD(TAG, "okay done");
     return true;
 }
 

@@ -3,8 +3,7 @@
 
 
 #include "FrameBuffer_t.h"
-#include <FastLED.h>
-
+#include "FastLEDConfig.h"
 
 typedef FrameBuffer_t<CRGB,NUM_STEPS,NUM_SEGMENTS, NUM_LEDS_PER_SEGMENT> FrameBuffer;
 

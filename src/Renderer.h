@@ -2,7 +2,7 @@
 #define __RENDERER_H__
 
 #include "RTOSConfig.h"
-#include <FastLED.h>
+#include "FastLEDConfig.h" 
 #include "SegmentBuffer.h"
 #include "types.h"
 

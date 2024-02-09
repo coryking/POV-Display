@@ -1,8 +1,8 @@
 #ifndef __SIMPLELINE_H__
 #define __SIMPLELINE_H__
 
-#include <FastLED.h>
 #include "Generator.h"
+#include "FastLEDConfig.h"
 
 class SimpleLine : public Generator
 {
