@@ -23,7 +23,8 @@ void RotationManager::start()
 
     xTaskCreate(&RotationManager::timingTask, "TimingTask", RTOS::LARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY, &_timingTask_h);
     this->_stepTimer_h = xTimerCreate("StepTimer", pdUS_TO_TICKS(1000), pdTRUE, this, &RotationManager::stepTimer);
-    adjustTimer();
+    xTimerStart(this->_stepTimer_h, 0);
+    // adjustTimerToLastISR();
     ESP_LOGI(TAG,"Done with rotationmanager start");
 }
 
@@ -71,25 +72,15 @@ void IRAM_ATTR RotationManager::onHallSensorTriggerISR(void *args)
 {
     RotationManager *instance = static_cast<RotationManager *>(args);
 
+    instance->lastISR = CURRENT_TIME_US();
+
+
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-    // Update the timestamp for RPM calculation
-    instance->_rpm->addTimestamp(CURRENT_TIME_US());
-
     // Notify the timing task that a new half-rotation has been triggered
     vTaskNotifyGiveFromISR(instance->_timingTask_h, &xHigherPriorityTaskWoken);
 
-    instance->_UsPerStep = instance->_rpm->getMicrosecondsPerRevolution() / static_cast<delta_t>(instance->_stepsPerRotation);
-
-    xTimerChangePeriodFromISR(instance->_stepTimer_h, pdUS_TO_TICKS(instance->getUsPerStep()), 0);
-
     // Yield in case a higher priority task was woken by the ISR
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-}
-
-delta_t RotationManager::getUsPerStep()
-{
-    return _UsPerStep;
 }
 
 void RotationManager::timingTask(void *pvParameters)
@@ -102,7 +93,7 @@ void RotationManager::timingTask(void *pvParameters)
         // wait until we get that juicy notification that it's time to do some computin'
         if (ulTaskNotifyTake(pdTRUE, portMAX_DELAY) == pdPASS)
         {
-            instance->adjustTimer();
+            instance->adjustTimerToLastISR();
         }
     }
     vTaskDelete(NULL);
@@ -134,10 +125,15 @@ void RotationManager::stepTimer(TimerHandle_t xTimer)
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
-void RotationManager::adjustTimer()
+void RotationManager::adjustTimerToLastISR()
 {
-
+    _rpm->addTimestamp(lastISR);
     this->_UsPerStep = _rpm->getMicrosecondsPerRevolution() / static_cast<delta_t>(_stepsPerRotation);
     ESP_LOGI(TAG, "Setting timer to %f", this->getUsPerStep());
     xTimerChangePeriod(this->_stepTimer_h, pdUS_TO_TICKS(this->getUsPerStep()), 0);
+}
+
+delta_t RotationManager::getUsPerStep()
+{
+    return std::max(_UsPerStep, static_cast<delta_t>(MIN_DELTA_US));
 }

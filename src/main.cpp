@@ -13,7 +13,8 @@ static DisplayController* dc;
 
 void setup()
 {
-    Serial.begin(1152000);
+    Serial.begin(115200);
+    esp_log_level_set("*", ESP_LOG_VERBOSE);
     delay(2500);
     dc = new DisplayController();
     dc->start();
