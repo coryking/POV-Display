@@ -1,16 +1,18 @@
 #ifndef __DISPLAYCONTROLLER_H__
 #define __DISPLAYCONTROLLER_H__
-#include <Arduino.h>
-#include "RTOSConfig.h"
-#include "FastLEDConfig.h" 
-#include "RotationManager.h"
+#include "FastLEDConfig.h"
 #include "FrameBufferManager.h"
-#include "Renderer.h"
 #include "Generator.h"
-#include "SegmentBuffer.h"
-#include "types.h"
-#include "config.h"
 #include "Generators/SimpleLine.h"
+#include "HallEffectDriver.h"
+#include "RTOSConfig.h"
+#include "Renderer.h"
+#include "SegmentBuffer.h"
+#include "StepIntervalCalculator.h"
+#include "StepPulseGenerator.h"
+#include "config.h"
+#include "types.h"
+#include <Arduino.h>
 
 /**
  * @brief The Display Controller
@@ -20,23 +22,23 @@
  */
 class DisplayController
 {
-public:
+  public:
     DisplayController();
     void start();
     TaskHandle_t getStepTaskHandler();
 
-private:
+  private:
     TaskHandle_t _stepTask;
     static void StepHandlerTask(void *pvParameters);
     void invokeRenderer(rotation_position_t rotationPosition);
     void handleFrameShift(rotation_position_t rotationPosition);
 
-    RotationManager* _rotation_manager;
+    HallEffectDriver *hallDriver;
+    StepPulseGenerator *pulseDriver;
+    StepIntervalCalculator *intervalCalculator;
+
     FrameBufferManager_t<CRGB, 3, NUM_SEGMENTS, NUM_STEPS, NUM_LEDS_PER_SEGMENT> *bufferManager;
-    Renderer* renderer;
-    Generator* generator;
-
-
-
+    Renderer *renderer;
+    Generator *generator;
 };
 #endif // __DISPLAYCONTROLLER_H__

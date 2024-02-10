@@ -8,6 +8,8 @@
 //typedef float delta_t;
 typedef float delta_t;
 typedef uint64_t timestamp_t;
+typedef uint64_t interval_t; // Represents intervals as unsigned integer types
+typedef uint64_t stepInterval_t; // Represents intervals between render steps
 
 typedef uint64_t micro_per_rev_t;
 

@@ -4,10 +4,6 @@
 #include "FastLEDConfig.h"
 #include "config.h"
 #include "DisplayController.h"
-#include "FrameBuffer.h"
-#include "RotationManager.h"
-#include "Renderer.h"
-#include "Generators/SimpleLine.h"
 
 static DisplayController* dc;
 

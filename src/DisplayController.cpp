@@ -12,6 +12,8 @@ DisplayController::DisplayController()
 {
     renderer = new Renderer();
     generator = new SimpleLine();
+    hallDriver = new HallEffectDriver(HALL_PIN);
+    intervalCalculator = new StepIntervalCalculator(hallDriver->getEventQueue(), NUM_STEPS, NUM_MAGNETS);
 }
 
 void DisplayController::start()
@@ -19,8 +21,10 @@ void DisplayController::start()
     ESP_LOGI(TAG,"Starting displaycontroller");
     xTaskCreate(&DisplayController::StepHandlerTask, "TimingTask", RTOS::LARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY, &_stepTask);
     bufferManager = new FrameBufferManager_t<CRGB, 3, NUM_SEGMENTS, NUM_STEPS, NUM_LEDS_PER_SEGMENT>();
-    _rotation_manager = new RotationManager(_stepTask, NUM_STEPS);
-    _rotation_manager->start();
+    pulseDriver = new StepPulseGenerator(&_stepTask, intervalCalculator, NUM_STEPS);
+    hallDriver->start();
+    intervalCalculator->start();
+    pulseDriver->start();
     generator->start();
     renderer->start();
     ESP_LOGI(TAG, "Everything is up");
@@ -36,19 +40,20 @@ void DisplayController::StepHandlerTask(void *pvParameters)
     DisplayController *instance = static_cast<DisplayController *>(pvParameters);
     assert(instance != nullptr);
 
+    uint32_t stepNumber;
     while (true)
     {
-
-        if (ulTaskNotifyTake(pdTRUE, portMAX_DELAY) == pdTRUE)
+        if (xTaskNotifyWait(0x00, ULONG_MAX, &stepNumber, portMAX_DELAY) == pdTRUE)
         {
+            // Now, stepNumber contains the step that triggered the timer
+            ESP_LOGV(TAG, "Hello from step task %d\n", stepNumber);
 
-            rotation_position_t pos = instance->_rotation_manager->getCurrentStep();
-            ESP_LOGV(TAG, "Hello from step task %d ts: %llu\n", pos.step, pos.stepTimestamp);
+            // Assuming you have a method to create a rotation_position_t from just a step number
+            rotation_position_t pos(stepNumber, CURRENT_TIME_US());
             instance->invokeRenderer(pos);
             instance->handleFrameShift(pos);
         }
     }
-    vTaskDelete(NULL);
 }
 
 void DisplayController::invokeRenderer(rotation_position_t rotationPosition)
@@ -68,7 +73,7 @@ void DisplayController::handleFrameShift(rotation_position_t rotationPosition)
         ESP_LOGV(TAG, "got frame to generate");
         genBuffer->clearBuffer();
         ESP_LOGV(TAG, "cleared buffer");
-        generator->enqueueNextFrame({_rotation_manager->getEstTimeForFutureRotation(1), genBuffer});
+        generator->enqueueNextFrame({pulseDriver->estimateFutureStepZero(1), genBuffer});
         ESP_LOGD(TAG, "Done, Enqueued stuff");
     }
 }

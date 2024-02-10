@@ -26,7 +26,7 @@ public:
 private:
     const uint8_t _sensorPin;                      // GPIO pin for the hall effect sensor
     static QueueHandle_t _triggerEventQueue; // Queue for sensor trigger events
-    esp_err_t HallEffectDriver::setupISR();
+    esp_err_t setupISR();
 
 };
 

@@ -56,3 +56,4 @@ esp_err_t HallEffectDriver::setupISR()
 
     return ESP_OK;
 }
+QueueHandle_t HallEffectDriver::_triggerEventQueue = nullptr; // Or appropriate initialization
