@@ -20,12 +20,19 @@ void DisplayController::start()
 {
     ESP_LOGI(TAG,"Starting displaycontroller");
     xTaskCreate(&DisplayController::StepHandlerTask, "TimingTask", RTOS::LARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY, &_stepTask);
+    ESP_LOGI(TAG, "task created");
     bufferManager = new FrameBufferManager_t<CRGB, 3, NUM_SEGMENTS, NUM_STEPS, NUM_LEDS_PER_SEGMENT>();
+    ESP_LOGI(TAG, "buffermanager created");
     pulseDriver = new StepPulseGenerator(&_stepTask, intervalCalculator, NUM_STEPS);
+    ESP_LOGI(TAG, "pulsedriver created");
     hallDriver->start();
+    ESP_LOGI(TAG, "halldriver done");
     intervalCalculator->start();
+    ESP_LOGI(TAG, "intervalcalc done");
     pulseDriver->start();
+    ESP_LOGI(TAG, "pulsedriver done");
     generator->start();
+    ESP_LOGI(TAG, "generator done");
     renderer->start();
     ESP_LOGI(TAG, "Everything is up");
 }
@@ -46,7 +53,7 @@ void DisplayController::StepHandlerTask(void *pvParameters)
         if (xTaskNotifyWait(0x00, ULONG_MAX, &stepNumber, portMAX_DELAY) == pdTRUE)
         {
             // Now, stepNumber contains the step that triggered the timer
-            ESP_LOGV(TAG, "Hello from step task %d\n", stepNumber);
+            ESP_LOGD(TAG, "Hello from step task %d\n", stepNumber);
 
             // Assuming you have a method to create a rotation_position_t from just a step number
             rotation_position_t pos(stepNumber, CURRENT_TIME_US());

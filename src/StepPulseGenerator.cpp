@@ -1,5 +1,9 @@
 #include "StepPulseGenerator.h"
 #include "config.h"
+#include "esp_log.h"
+
+static const char *TAG = "DisplayController";
+
 StepPulseGenerator::StepPulseGenerator(TaskHandle_t targetTaskHandle, StepIntervalCalculator *intervalCalculator,
                                        uint16_t stepsPerRotation)
     : targetTaskHandle(targetTaskHandle), intervalCalculator(intervalCalculator), stepsPerRotation(stepsPerRotation),
@@ -29,6 +33,7 @@ void StepPulseGenerator::notifyNextStep()
     if(!intervalCalculator->isWarmUpComplete() || !intervalCalculator->isDeviceRotating()) {
         // if the thing is stopped or not ready, lets just keep watching until something happens
         xTimerChangePeriod(timerHandle, pdMS_TO_TICKS(10), 0);
+        ESP_LOGD(TAG, "not rotating or warm up isn't complete... stalling");
         return;
     }
 
