@@ -26,6 +26,12 @@ void StepPulseGenerator::timerCallback(TimerHandle_t xTimer)
 
 void StepPulseGenerator::notifyNextStep()
 {
+    if(!intervalCalculator->isWarmUpComplete() || !intervalCalculator->isDeviceRotating()) {
+        // if the thing is stopped or not ready, lets just keep watching until something happens
+        xTimerChangePeriod(timerHandle, pdMS_TO_TICKS(10), 0);
+        return;
+    }
+
     stepInterval_t nextInterval = intervalCalculator->getCurrentStepInterval();
     currentStep = (currentStep + 1) % stepsPerRotation;
 
