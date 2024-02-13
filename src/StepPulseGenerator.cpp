@@ -1,6 +1,10 @@
 #include "StepPulseGenerator.h"
 #include "config.h"
 #include "esp_log.h"
+#include <cmath>
+
+#define MIN_STEP_INTERVAL 100
+#define STEP_RETRY_MS 100
 
 static const char *TAG = "DisplayController";
 
@@ -30,28 +34,39 @@ void StepPulseGenerator::timerCallback(TimerHandle_t xTimer)
 
 void StepPulseGenerator::notifyNextStep()
 {
-    if(!intervalCalculator->isWarmUpComplete() || !intervalCalculator->isDeviceRotating()) {
-        // if the thing is stopped or not ready, lets just keep watching until something happens
-        xTimerChangePeriod(timerHandle, pdMS_TO_TICKS(10), 0);
-        ESP_LOGD(TAG, "not rotating or warm up isn't complete... stalling");
+    if (!intervalCalculator->isWarmUpComplete() || !intervalCalculator->isDeviceRotating())
+    {
+        ESP_LOGD(TAG, "Not rotating or warm-up isn't complete... stalling");
+        xTimerChangePeriod(timerHandle, pdMS_TO_TICKS(STEP_RETRY_MS), 0);
         return;
     }
 
     stepInterval_t nextInterval = intervalCalculator->getCurrentStepInterval();
+    // Ensure there's a minimum interval to avoid 0 tick period
+    nextInterval = max(nextInterval, static_cast<stepInterval_t>(MIN_STEP_INTERVAL));
+
+    if (nextInterval > 0)
+    {
+        // Convert microseconds to ticks, ensuring the value is greater than 0
+        TickType_t ticks = pdUS_TO_TICKS(nextInterval);
+        ticks = ticks > 0 ? ticks : 1; // Ensure at least 1 tick
+        xTimerChangePeriod(timerHandle, ticks, 0);
+    }
+    else
+    {
+        // Fallback in case of invalid interval
+        ESP_LOGW(TAG, "Invalid interval calculated. Using fallback.");
+        xTimerChangePeriod(timerHandle, pdMS_TO_TICKS(STEP_RETRY_MS), 0);
+    }
+
     currentStep = (currentStep + 1) % stepsPerRotation;
-
-
     timestamp_t stepTimestamp = CURRENT_TIME_US();
-
+    ESP_LOGD(TAG, "Ahoy current step is %d", currentStep);
     if (currentStep == 0)
     {
         updateStepZeroTimestamp(stepTimestamp);
     }
-    // Notify the target task with the next step position (assumes currentStep fits into a 32-bit int, which is entirely reasonable)
     xTaskNotify(targetTaskHandle, static_cast<uint32_t>(currentStep), eSetValueWithOverwrite);
-
-    // Restart the timer with the next interval
-    xTimerChangePeriod(timerHandle, pdMS_TO_TICKS(nextInterval), 0);
 }
 
 void StepPulseGenerator::updateStepZeroTimestamp(timestamp_t timestamp)

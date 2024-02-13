@@ -1,6 +1,8 @@
 #include "StepIntervalCalculator.h"
 #include "HallEffectDriver.h"
 
+static const char *TAG = "StepInterval";
+
 StepIntervalCalculator::StepIntervalCalculator(QueueHandle_t sensorTriggerQueue, uint16_t stepsPerRotation,
                                                uint16_t triggersPerRotation)
     : _sensorTriggerQueue(sensorTriggerQueue), _stepsPerRotation(stepsPerRotation),
@@ -10,7 +12,7 @@ StepIntervalCalculator::StepIntervalCalculator(QueueHandle_t sensorTriggerQueue,
 
 void StepIntervalCalculator::start()
 {
-    xTaskCreate(taskProcessor, "StepIntervalTask", configMINIMAL_STACK_SIZE, this, tskIDLE_PRIORITY, &_taskHandle);
+    xTaskCreate(taskProcessor, "StepIntervalTask", RTOS::XLARGE_STACK_SIZE, this, tskIDLE_PRIORITY, &_taskHandle);
 }
 
 stepInterval_t StepIntervalCalculator::getCurrentStepInterval() const
@@ -36,6 +38,7 @@ void StepIntervalCalculator::taskProcessor(void *pvParameters)
     {
         if (xQueueReceive(calculator->_sensorTriggerQueue, &event, portMAX_DELAY) == pdPASS)
         {
+            ESP_LOGV(TAG, "Got a step at %d", event.triggerTimestamp);
             // Process event to update _currentStepInterval
             calculator->calculateStepInterval(event.triggerTimestamp);
         }
@@ -71,7 +74,7 @@ void StepIntervalCalculator::calculateStepInterval(timestamp_t currentTimestamp)
 
 bool StepIntervalCalculator::isDeviceRotating() const
 {
-    return deviceRotating;
+    return true;//deviceRotating;
 }
 
 bool StepIntervalCalculator::isWarmUpComplete() const

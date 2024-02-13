@@ -18,7 +18,6 @@ private:
     TaskHandle_t renderTaskHandle_h;
     MessageBufferHandle_t renderMessageBuffer_h;
     static void stepBufferRendererTask(void *pvParameters);
-    CRGB leds[NUM_SEGMENTS][NUM_LEDS_PER_SEGMENT];
 
 };
 

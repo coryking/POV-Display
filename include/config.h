@@ -2,7 +2,7 @@
 #define __CONFIG_H__
 
 #include <cstdint>
-
+#include <Arduino.h>
 #ifdef ARDUINO_ARCH_RP2040
 // Pin definitions
 #define HALL_PIN D0
@@ -15,9 +15,9 @@
 #define LED_3_DATA D6
 #elif defined(ESP32)
 // all three segments are on the same strip
-#define HALL_PIN 3
-#define LED_CLOCK 7
-#define LED_DATA 9
+#define HALL_PIN D1
+#define LED_CLOCK D8
+#define LED_DATA D10
 #endif
 
 #define DEGREES_PER_STEP 5
@@ -31,7 +31,7 @@
 
 #define NUM_ROWS (NUM_LEDS_PER_SEGMENT * NUM_ACTIVE_SEGMENTS)
 
-#define NUM_LEDS (NUM_ROWS * NUM_STEPS)
+#define NUM_LEDS (NUM_LEDS_PER_SEGMENT * NUM_SEGMENTS)
 
 #define LED_DATA_RATE_MHZ 24
 

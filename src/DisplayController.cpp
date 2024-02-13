@@ -50,16 +50,16 @@ void DisplayController::StepHandlerTask(void *pvParameters)
     uint32_t stepNumber;
     while (true)
     {
-        if (xTaskNotifyWait(0x00, ULONG_MAX, &stepNumber, portMAX_DELAY) == pdTRUE)
-        {
-            // Now, stepNumber contains the step that triggered the timer
-            ESP_LOGD(TAG, "Hello from step task %d\n", stepNumber);
+        xTaskNotifyWait(0x00, ULONG_MAX, &stepNumber, portMAX_DELAY);
 
-            // Assuming you have a method to create a rotation_position_t from just a step number
-            rotation_position_t pos(stepNumber, CURRENT_TIME_US());
-            instance->invokeRenderer(pos);
-            instance->handleFrameShift(pos);
-        }
+        // Now, stepNumber contains the step that triggered the timer
+        ESP_LOGD(TAG, "Hello from step task %d\n", stepNumber);
+
+        // Assuming you have a method to create a rotation_position_t from just a step number
+        rotation_position_t pos(stepNumber, CURRENT_TIME_US());
+        instance->invokeRenderer(pos);
+        instance->handleFrameShift(pos);
+        
     }
 }
 
