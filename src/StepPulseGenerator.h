@@ -8,7 +8,7 @@
 class StepPulseGenerator
 {
   public:
-    StepPulseGenerator(TaskHandle_t targetTaskHandle, StepIntervalCalculator *intervalCalculator,
+    StepPulseGenerator(QueueHandle_t targetQueueHandle, StepIntervalCalculator *intervalCalculator,
                        uint16_t stepsPerRotation);
     void start();
     void stop();
@@ -17,10 +17,10 @@ class StepPulseGenerator
 
   private:
     TimerHandle_t timerHandle;
-    const TaskHandle_t targetTaskHandle;              // Task to notify
+    const QueueHandle_t targetQueueHandle;              // Task to notify
     StepIntervalCalculator *intervalCalculator; // For getting step intervals
     const uint16_t stepsPerRotation;
-    volatile int currentStep;
+    volatile step_t currentStep;
     timestamp_t lastStepZeroTimestamp; // Timestamp of the last "step zero"
 
     static void timerCallback(TimerHandle_t xTimer);

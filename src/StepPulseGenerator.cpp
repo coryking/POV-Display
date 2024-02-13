@@ -8,9 +8,9 @@
 
 static const char *TAG = "DisplayController";
 
-StepPulseGenerator::StepPulseGenerator(TaskHandle_t targetTaskHandle, StepIntervalCalculator *intervalCalculator,
+StepPulseGenerator::StepPulseGenerator(QueueHandle_t targetQueueHandle, StepIntervalCalculator *intervalCalculator,
                                        uint16_t stepsPerRotation)
-    : targetTaskHandle(targetTaskHandle), intervalCalculator(intervalCalculator), stepsPerRotation(stepsPerRotation),
+    : targetQueueHandle(targetQueueHandle), intervalCalculator(intervalCalculator), stepsPerRotation(stepsPerRotation),
       currentStep(0)
 {
     timerHandle = xTimerCreate("StepTimer", pdMS_TO_TICKS(1000), pdFALSE, this, timerCallback);
@@ -61,12 +61,14 @@ void StepPulseGenerator::notifyNextStep()
 
     currentStep = (currentStep + 1) % stepsPerRotation;
     timestamp_t stepTimestamp = CURRENT_TIME_US();
-    ESP_LOGD(TAG, "Ahoy current step is %d", currentStep);
     if (currentStep == 0)
     {
         updateStepZeroTimestamp(stepTimestamp);
     }
-    xTaskNotify(targetTaskHandle, static_cast<uint32_t>(currentStep), eSetValueWithOverwrite);
+    step_t stepToSend = currentStep;
+
+    xQueueSend(targetQueueHandle, &stepToSend, portMAX_DELAY);
+    
 }
 
 void StepPulseGenerator::updateStepZeroTimestamp(timestamp_t timestamp)

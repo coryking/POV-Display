@@ -6,7 +6,6 @@ static const char *TAG = "SimpleLine";
 
 bool SimpleLine::GenerateFrame(generatorParams params)
 {
-    ESP_LOGD(TAG,"Here inside generate frme");
     CRGB *fb = params.framebuffer->getBuffer();
     _currentRow = (_currentRow + 1) % params.framebuffer->getRows();
     _currentPalleteIndex = (_currentPalleteIndex + 1) & 255;
@@ -17,7 +16,6 @@ bool SimpleLine::GenerateFrame(generatorParams params)
 
         fb[index] = color;
     }
-    ESP_LOGD(TAG, "okay done");
     return true;
 }
 

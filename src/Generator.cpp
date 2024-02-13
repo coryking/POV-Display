@@ -25,7 +25,6 @@ void Generator::GeneratorTaskShell(void *pvParameters)
     {
         generatorParams params;
         if (xQueueReceive(instance->_generatorQueue_h, &params, portMAX_DELAY) == pdTRUE) {
-            ESP_LOGD(TAG, "Time to generate!");
             // validate that we are still in a good state for kicking off generation
             // if(params.framebuffer->getState() == FrameBufferState::QueuedForGeneration || params.framebuffer->getState() == FrameBufferState::Empty)
             //{

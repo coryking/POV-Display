@@ -51,9 +51,9 @@ void Renderer::start()
     FastLED.addLeds<APA102, LED_3_DATA, LED_3_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[2][0],
                                                                                             NUM_LEDS_PER_SEGMENT);
 #elif defined(ESP32)
-    FastLED.addLeds<SK9822, LED_DATA, LED_CLOCK>(&leds[0], 10); // Use a small, fixed number
+    //FastLED.addLeds<SK9822, LED_DATA, LED_CLOCK>(&leds[0], 10); // Use a small, fixed number
 
-    //FastLED.addLeds<SK9822, LED_DATA, LED_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[0][0], NUM_LEDS);
+    FastLED.addLeds<SK9822, LED_DATA, LED_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[0], NUM_LEDS);
 #endif
     ESP_LOGD(TAG, "LED set up");
     xTaskCreate(&Renderer::stepBufferRendererTask, "Renderer", RTOS::XLARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY,

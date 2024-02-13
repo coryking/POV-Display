@@ -29,6 +29,8 @@ class DisplayController
 
   private:
     TaskHandle_t _stepTask;
+    QueueHandle_t _queueHandle;
+    
     static void StepHandlerTask(void *pvParameters);
     void invokeRenderer(rotation_position_t rotationPosition);
     void handleFrameShift(rotation_position_t rotationPosition);
