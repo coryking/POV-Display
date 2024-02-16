@@ -88,6 +88,5 @@ void DisplayController::handleFrameShift(rotation_position_t rotationPosition)
         FrameBuffer *genBuffer = bufferManager->getGeneratorFrame();
         genBuffer->clearBuffer();
         generator->enqueueNextFrame({pulseDriver->estimateFutureStepZero(1), genBuffer});
-        ESP_LOGD(TAG, "Done, Enqueued stuff");
     }
 }

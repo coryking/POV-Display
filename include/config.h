@@ -16,11 +16,11 @@
 #elif defined(ESP32)
 // all three segments are on the same strip
 #define HALL_PIN D1
-#define LED_CLOCK D8
-#define LED_DATA D10
+#define LED_CLOCK 9
+#define LED_DATA 7
 #endif
 
-#define DEGREES_PER_STEP 5
+#define DEGREES_PER_STEP 20
 #define NUM_STEPS (360/DEGREES_PER_STEP)
 
 #define NUM_ACTIVE_SEGMENTS 3 // Can be changed to 2 or 3 as needed
