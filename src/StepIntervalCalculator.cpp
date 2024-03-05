@@ -12,6 +12,8 @@ StepIntervalCalculator::StepIntervalCalculator(QueueHandle_t sensorTriggerQueue,
 
 void StepIntervalCalculator::start()
 {
+    _rpmLib = new RPMSmoother_t<RPM_SMOOTHING_LEVEL, NUM_MAGNETS>(CURRENT_TIME_US());
+
     xTaskCreate(taskProcessor, "StepIntervalTask", RTOS::XLARGE_STACK_SIZE, this, tskIDLE_PRIORITY, &_taskHandle);
 }
 
@@ -26,7 +28,7 @@ stepInterval_t StepIntervalCalculator::getCurrentStepInterval() const
     {
         return UINT64_MAX;
     }
-    return currentStepInterval;
+    return static_cast<stepInterval_t>(_rpmLib->getDelta()) / NUM_STEPS_BETWEEN_MAGNETS;
 }
 
 void StepIntervalCalculator::taskProcessor(void *pvParameters)
@@ -38,7 +40,6 @@ void StepIntervalCalculator::taskProcessor(void *pvParameters)
     {
         if (xQueueReceive(calculator->_sensorTriggerQueue, &event, portMAX_DELAY) == pdPASS)
         {
-            ESP_LOGV(TAG, "Got a step at %d", event.triggerTimestamp);
             // Process event to update _currentStepInterval
             calculator->calculateStepInterval(event.triggerTimestamp);
         }
@@ -50,8 +51,9 @@ void StepIntervalCalculator::calculateStepInterval(timestamp_t currentTimestamp)
 {
     if (lastTimestamp != 0)
     {
+        _rpmLib->addTimestamp(currentTimestamp);
         stepInterval_t interval = currentTimestamp - lastTimestamp;
-
+        
         // Check for warm-up completion
         if (++triggerCount >= triggerThreshold)
         {
@@ -65,7 +67,7 @@ void StepIntervalCalculator::calculateStepInterval(timestamp_t currentTimestamp)
         }
         else
         {
-            currentStepInterval = interval; // Update interval after warm-up
+            currentMagnetInterval = interval; // Update interval after warm-up
             deviceRotating = true;
         }
     }
@@ -82,7 +84,7 @@ bool StepIntervalCalculator::isWarmUpComplete() const
     return warmUpComplete;
 }
 
-volatile stepInterval_t StepIntervalCalculator::currentStepInterval = 0;
+volatile stepInterval_t StepIntervalCalculator::currentMagnetInterval = 0;
 bool StepIntervalCalculator::warmUpComplete = false;
 bool StepIntervalCalculator::deviceRotating = false;
 timestamp_t StepIntervalCalculator::lastTimestamp = 0;

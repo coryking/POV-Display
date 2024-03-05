@@ -8,6 +8,7 @@
 
 static const char *TAG = "Renderer";
 static const int message_buffer_overhead = 16;
+static const int segmap[] = {1, 0, 2};
 
 CRGB leds[NUM_LEDS];
 void Renderer::stepBufferRendererTask(void *pvParameters)
@@ -35,47 +36,35 @@ void Renderer::stepBufferRendererTask(void *pvParameters)
             ESP_LOGE(TAG, "Received incomplete stepBuffer: expected %d, got %d bytes",
                      sizeof(StepBuffer_t<CRGB, NUM_SEGMENTS, NUM_LEDS_PER_SEGMENT>), bytesReceived);
             // Handle error or incomplete data
-        }
+        } else {
 
-        // Log some values from stepBuffer to verify integrity
-        for (int seg = 0; seg < NUM_SEGMENTS; ++seg)
-        {
-            for (int led = 0; led < NUM_LEDS_PER_SEGMENT; led++)
+            // ESP_LOGV(TAG, "Rendering Crap");
+            // FastLED.clear();
+            for (int seg = 0; seg < NUM_SEGMENTS; ++seg)
             {
-                if (seg == 0 && led < 5)
-                { // Example: Log first few LEDs of the first segment
-                    //ESP_LOGD(TAG, "Segment %d, LED %d: R=%d, G=%d, B=%d", seg, led, stepBuffer[seg][led].r,
-                    //         stepBuffer[seg][led].g, stepBuffer[seg][led].b);
+                for (int led = 0; led < NUM_LEDS_PER_SEGMENT; led++)
+                {
+#ifdef DEMO
+                    // Calculate Hue based on LED's position
+                    int hue = (led * hueStep) % 256; // Modulo 256 to ensure hue is within 0-255
+
+                    // Calculate Value based on the segment
+                    int value = (seg + 1) * valuePerSegment; // Increment value with each segment
+                    value = min(value, 255);                 // Ensure value does not exceed 255
+
+                    // Assuming Saturation is constant, e.g., 240
+                    int saturation = 240;
+
+                    // Update LED color
+                    leds[led + segmap[seg] * NUM_LEDS_PER_SEGMENT] = CHSV(hue, saturation, value);
+#else
+                    leds[led + segmap[seg] * NUM_LEDS_PER_SEGMENT] = stepBuffer[seg][led];
+#endif // DEMO
                 }
             }
+            FastLED.show();
+            // ESP_LOGV(TAG, "Done Crap");
         }
-
-        //ESP_LOGV(TAG, "Rendering Crap");
-        FastLED.clear();
-        for (int seg = 0; seg < NUM_SEGMENTS; ++seg)
-        {
-            for (int led = 0; led < NUM_LEDS_PER_SEGMENT; led++)
-            {
-
-                /*// Calculate Hue based on LED's position
-                int hue = (led * hueStep) % 256; // Modulo 256 to ensure hue is within 0-255
-
-                // Calculate Value based on the segment
-                int value = (seg + 1) * valuePerSegment; // Increment value with each segment
-                value = min(value, 255);                 // Ensure value does not exceed 255
-
-                // Assuming Saturation is constant, e.g., 240
-                int saturation = 240;
-
-                // Update LED color
-                leds[led + seg * NUM_LEDS_PER_SEGMENT] = CHSV(hue, saturation, value);
-
-*/
-                leds[led + seg * NUM_LEDS_PER_SEGMENT] =stepBuffer[seg][led];
-            }
-        }
-        FastLED.show();
-        //ESP_LOGV(TAG, "Done Crap");
     }
 }
 
@@ -100,7 +89,7 @@ void Renderer::start()
 
     FastLED.addLeds<SK9822, LED_DATA, LED_CLOCK, BGR, DATA_RATE_MHZ(LED_DATA_RATE_MHZ)>(&leds[0], NUM_LEDS);
 #endif
-    FastLED.setBrightness(25);
+    FastLED.setBrightness(15);
     ESP_LOGD(TAG, "LED set up");
     xTaskCreate(&Renderer::stepBufferRendererTask, "Renderer", RTOS::XLARGE_STACK_SIZE, this, RTOS::HIGH_PRIORITY,
                 NULL);

@@ -4,6 +4,7 @@
 #include "FrameBufferManager.h"
 #include "Generator.h"
 #include "Generators/SimpleLine.h"
+#include "Generators/Dot.h"
 #include "HallEffectDriver.h"
 #include "RTOSConfig.h"
 #include "Renderer.h"

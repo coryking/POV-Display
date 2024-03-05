@@ -13,8 +13,9 @@ protected:
     bool GenerateFrame(generatorParams params) override;
 
 private:
-    int _currentRow = -1;
+    int _currentColumn = -1;
     int _currentPalleteIndex = -1;
+    timestamp_t lastMovement = 0;
     CRGBPalette16 currentPalette;
 };
 

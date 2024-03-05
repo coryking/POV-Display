@@ -25,7 +25,6 @@ template <size_t _NUM_REVOLUTIONS, size_t _NUM_MAGENTS> class RPMSmoother_t
         _avg_delta = _avg.add(delta).average();
         return *this;
     }
-
     /**
      * @brief Get the smoothed time delta between magnet triggers
      *
@@ -56,7 +55,7 @@ template <size_t _NUM_REVOLUTIONS, size_t _NUM_MAGENTS> class RPMSmoother_t
     RollingAverage<double, _NUM_REVOLUTIONS * _NUM_MAGENTS> _avg;
     // ExponentialMovingAverage<delta_t> _avg;
     volatile timestamp_t
-        _lastTimestamp; // gotta keep this shit volalitile 'cause it will probably get messed with in some ISR
+    _lastTimestamp; // gotta keep this shit volalitile 'cause it will probably get messed with in some ISR
     delta_t _avg_delta = 10;
 };
 

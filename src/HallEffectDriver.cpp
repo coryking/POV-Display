@@ -42,7 +42,7 @@ esp_err_t HallEffectDriver::setupISR()
     gpio_num_t pin = static_cast<gpio_num_t>(_sensorPin);
 
     gpio_config_t io_conf;
-    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
     io_conf.mode = GPIO_MODE_INPUT;
     io_conf.pin_bit_mask = (1ULL << _sensorPin);
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;

@@ -4,6 +4,7 @@
 #include "DisplayController.h"
 #include "config.h"
 #include "RTOSConfig.h"
+#include "Generators/Chunker.h"
 #include "esp_log.h"
 
 static const char *TAG = "DisplayController";
@@ -11,7 +12,7 @@ static const char *TAG = "DisplayController";
 DisplayController::DisplayController()
 {
     renderer = new Renderer();
-    generator = new SimpleLine();
+    generator = new Dot();
     hallDriver = new HallEffectDriver(HALL_PIN);
     intervalCalculator = new StepIntervalCalculator(hallDriver->getEventQueue(), NUM_STEPS, NUM_MAGNETS);
     _queueHandle = xQueueCreate(10, sizeof(step_t)); // Adjust size as needed

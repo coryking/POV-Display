@@ -16,8 +16,8 @@
 #elif defined(ESP32)
 // all three segments are on the same strip
 #define HALL_PIN D1
-#define LED_CLOCK 9
-#define LED_DATA 7
+#define LED_CLOCK 7
+#define LED_DATA 9
 #endif
 
 #define DEGREES_PER_STEP 20
@@ -33,14 +33,14 @@
 
 #define NUM_LEDS (NUM_LEDS_PER_SEGMENT * NUM_SEGMENTS)
 
-#define LED_DATA_RATE_MHZ 24
-
-#define DEBOUNCE_MICROS 100 // microseconds of debounce
+#define LED_DATA_RATE_MHZ 40
 
 #define ARM_OFFSET (NUM_STEPS / NUM_ARMS)
 
-#define RPM_SMOOTHING_LEVEL 10
+#define RPM_SMOOTHING_LEVEL 20
 #define NUM_MAGNETS 2
+
+#define NUM_STEPS_BETWEEN_MAGNETS (NUM_STEPS / NUM_MAGNETS) // the number of steps between each magnet.
 
 
 #ifdef ARDUINO_ARCH_RP2040
